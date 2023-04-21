@@ -6,35 +6,8 @@ from ta.volume import ChaikinMoneyFlowIndicator
 import pandas as pd
 import numpy as np
 
-#kraken_exchange = ccxt.kraken()
-#kraken_market = kraken_exchange.load_markets()
-#for mkt in kraken_market:
-##    print(mkt)
-    
-#bitcoin_data = kraken_exchange.fetch_ohlcv("BTC/AUD", timeframe="1d", limit = 720)
 
-#for coindata in bitcoin_data:
-#    print(coindata,"\n")
-
-#bitcoin_indicators = pd.DataFrame(bitcoin_data, columns = ["timestamp","open", "high", "low", "close", "volume"])
-
-#print(bitcoin_indicators)
-
-#rsi_ind = RSIIndicator(bitcoin_indicators['close'])
-
-##rsi_data =rsi_ind.rsi()
-#for val in rsi_values:
- #   print(val)
-
-
-#srsi_ind = StochRSIIndicator(bitcoin_indicators['close'])
-#srsi_data= rsi_ind.rsi()
-#rsi_ind = RSIIndicator(bitcoin_indicators['close'])
-#rsi_data =rsi_ind.rsi()
-
-#for val in srsi_values:
-#    print("SRSI", val)
-'''Control the whole process of generting prarmeters and running the bot, storing and evaluating the output'''    
+'''Control the whole process of generting parameters and running the bot, storing and evaluating the output'''    
 def main():
     INIT_MONEY = 100.0
     SRSI_BUY = 0.2
@@ -87,7 +60,7 @@ class TradeBot:
         
         for day in range(len(self.tohclv)):
             srsi_reading=self.srsidata[day]
-            print("srsi", srsi_reading, "bot: ",self.cash, " bitcoins: ", self.coins,"\n")
+            print(day, " srsi", srsi_reading, "bot: ",self.cash, " bitcoins: ", self.coins,"\n")
             
             #price_array = self.TOHCLV.to_array()
             current_price = (self.tohclv['open'] + self.tohclv['close'] + self.tohclv['high'] + self.tohclv['low'])/4
@@ -101,11 +74,14 @@ class TradeBot:
                 buy_trigger_status = True
                 sell_trigger_status = False
             
-            if sell_trigger_status == True:
-                self.cash = float(self.cash + (current_price[day] * self.coins))
+            if sell_trigger_status == True and self.coins > 0:
+                potential_funds= current_price[day] * self.coins
+                funds_gained = potential_funds - (potential_funds/50)
+                self.cash = float(self.cash + funds_gained)
                 self.coins = 0
             elif buy_trigger_status == True:
-                self.coins = float(self.coins + (self.cash/ current_price[day]))
+                available_funds = self.cash - (self.cash/50)
+                self.coins = float(self.coins + (available_funds/ current_price[day]))
                 self.cash = 0 #float((self.cash - (self.cash//current_price[day]) * current_price[day]))
         
         if self.coins > 0:
