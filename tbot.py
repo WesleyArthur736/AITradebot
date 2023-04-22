@@ -31,7 +31,7 @@ def main():
     bot = TradeBot(SRSI_BUY, SRSI_SELL, INIT_MONEY,14, 50, 50,bitcoin_indicators, srsi_data )
     bot.execute_period()
     print("final dump", bot.cash)
-    nsga3 = NSGAIII()
+    #nsga3 = NSGAIII()
     
 
 class TradeBot:
@@ -61,15 +61,17 @@ class TradeBot:
         
         for day in range(len(self.tohclv)):
             srsi_reading=self.srsidata[day]
-            print(day, " srsi", srsi_reading, "bot: ",self.cash, " bitcoins: ", self.coins,"\n")
+            
             
             #price_array = self.TOHCLV.to_array()
             current_price = (self.tohclv['open'] + self.tohclv['close'] + self.tohclv['high'] + self.tohclv['low'])/4
             #print("current price", current_price[day])
+            print(day, " srsi", srsi_reading, "bot: ",self.cash, " bitcoins: ", self.coins,"current_price", current_price[day])
             # sell trigger
             if srsi_reading >= self.sell_trigger:
                 sell_trigger_status = True
                 buy_trigger_status = False
+            
             #buy trigger
             elif srsi_reading <= self.buy_trigger:
                 buy_trigger_status = True
@@ -114,9 +116,44 @@ class NSGAIII:
         return botx1 >= botx2
     
     def nondominated_sort(self, pop):
-        for x_index in range(pop.to_array().shape[0])
-        
+        for x_index in range(pop.to_array().shape[0]-1):
+            x1 = pop[x_index]
+            x2 = pop[x_index+1]
+            result=NSGAIII.dominates(x1, x2)
             
-#main()          
+            if result == True:
+                continue
+            else:
+                pop[x_index], pop[x_index + 1] = pop[x_index + 1], pop[x_index]
+        
+    def mutate(self, pop):
+        rnd = np.random.default_rng()
+        window = 50
+        smooth1 = 20
+        smooth2 = 20
+        
+        rndparameterlist = [window,smooth1, smooth2]
+        rndparameterchoice = rnd.integers(low=0, high = 2)
+        newparametervalue = rnd.integers(low=0, high = rndparameterlist[rndparameterchoice])
+        
+        # choose random individual to mutate (not the best)
+
+        indtomut = rnd.intergers(low=1, high = len(pop))
+        
+        pop.iloc[indtomut, rndparameterchoice] = newparametervalue
+        return pop
+        
+        
+        
+        
+    
+    def crossover(self):
+        pass
+    
+    def recombinant(self):
+        self
+        
+    
+main()          
 
 #print(EA.dominates([20,2,2], [14,2,2]))
