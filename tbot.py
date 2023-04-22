@@ -31,6 +31,7 @@ def main():
     bot = TradeBot(SRSI_BUY, SRSI_SELL, INIT_MONEY,14, 50, 50,bitcoin_indicators, srsi_data )
     bot.execute_period()
     print("final dump", bot.cash)
+    nsga3 = NSGAIII()
     
 
 class TradeBot:
@@ -89,9 +90,33 @@ class TradeBot:
             self.coins = 0
                 
             
-class EA:
-    pass            
+class NSGAIII:
+    def __init__(self, Inpop, generations, SRSI_buy, SRSI_sell,TOHCLV, srsi_data, srefpoints=None):
+        self.newpop_s= np.zeros([len(Inpop),len(Inpop[:,0])])
+        self.pop=Inpop
+        self.generations= generations
+        self.srsi_buy = SRSI_buy
+        self.srsi_sell = SRSI_sell
+        self.refpoints= srefpoints
+        self.tohclv = TOHCLV
+        self.srsi_data=srsi_data
+        
             
+    def dominates (self, x1, x2):
+        num_data_points = 100
+        rnd=np.random.default_rng()
+        start=rnd.integers(low=0, high = 720 - num_data_points)
+        stop = start + num_data_points
+    
+        botx1 = TradeBot(self.srsi_buy, self.srsi_sell, x1[0], x1[1], x1[2], self.tohclv[start:stop], self.srsi_data[start:stop])
+        botx2 = TradeBot(self.srsi_buy, self.srsi_sell, x2[0], x2[1], x2[2], self.tohclv[start:stop], self.srsi_data[start:stop])
+        
+        return botx1 >= botx2
+    
+    def nondominated_sort(self, pop):
+        for x_index in range(pop.to_array().shape[0])
+        
             
-            
-main()          
+#main()          
+
+#print(EA.dominates([20,2,2], [14,2,2]))
