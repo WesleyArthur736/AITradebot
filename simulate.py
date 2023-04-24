@@ -4,50 +4,54 @@ import matplotlib.pyplot as plt
 from macd_trader import MACDTrader
 from models import Trader
 
-# 720 days of data
-# start date: Wednesday, 5 May 2021
-# end date: Monday, 24 April 2023
-btc_aud_df = pd.read_csv("data/btc_aud_1d.csv")
-btc_aud_df["Mid Price"] = 0.5*btc_aud_df["High"] + 0.5*btc_aud_df["Close"]
 
+class Simulate:
+    def __init__(self, trader: Trader, start=0, end=500):
+        # 720 days of data
+        # start date: Wednesday, 5 May 2021
+        # end date: Monday, 24 April 2023
+        btc_aud_df = pd.read_csv("data/btc_aud_1d.csv")
+        btc_aud_df["Mid Price"] = 0.5 * btc_aud_df["High"] + 0.5 * btc_aud_df["Close"]
+        trading_data = btc_aud_df.loc[start:(end - 1)].reset_index(drop=False)
+        self.trading_data = trading_data
+        self.trader = trader
 
-def simulate(trader: Trader, start=0, end=500):
-    pnls = []
-    position = {"BTC": 0, "AUD": 100.0}
-    trading_data = btc_aud_df.loc[start:(end - 1)].reset_index(drop=False)
-    signals = trader.generate_signals(trading_data)
+        self.position = {"BTC": 0, "AUD": 100.0}
+        self.net_worth = 100.0
+        self.pnls = []
 
-    order = 0
-    for idx, row in trading_data.iterrows():
-        if order == 1:
-            price = row["Open"]
-            position["BTC"] = position["AUD"] / price
-            position["AUD"] = 0
-            order = 0
-        elif order == -1:
-            price = row["Open"]
-            position["AUD"] = position["BTC"] * price
-            position["BTC"] = 0
-            order = 0
-        signal = signals[idx]
-        # buy
-        if signal == 1.0:
-            print("BUY AT ", idx)
-            order = 1
-        # sell
-        elif signal == -1.0:
-            print("SELL AT ", idx)
-            order = -1
+    def run_simulation(self):
+        signals = self.trader.generate_signals(self.trading_data)
 
-        pnls.append(position["BTC"] * row["Close"] + position["AUD"])
+        order = 0
+        for idx, row in self.trading_data.iterrows():
+            if order == 1:
+                price = row["Open"]
+                self.position["BTC"] = self.position["AUD"] / price
+                self.position["AUD"] = 0
+                order = 0
+            elif order == -1:
+                price = row["Open"]
+                self.position["AUD"] = self.position["BTC"] * price
+                self.position["BTC"] = 0
+                order = 0
+            signal = signals[idx]
+            # buy
+            if signal == 1.0:
+                print("BUY AT ", idx)
+                order = 1
+            # sell
+            elif signal == -1.0:
+                print("SELL AT ", idx)
+                order = -1
 
-    plt.plot(pnls)
-    plt.show()
-
-    final_close = trading_data.iloc[-1]["Close"]
-    print("Final position worth: ", position["BTC"]*final_close + position["AUD"], " AUD")
+            self.net_worth = self.position["BTC"] * row["Close"] + self.position["AUD"]
+            self.pnls.append(self.net_worth)
 
 
 if __name__ == "__main__":
     macd_trader = MACDTrader(window_slow=26, window_fast=12)
-    simulate(macd_trader)
+    simulation = Simulate(trader=macd_trader)
+    simulation.run_simulation()
+    plt.plot(simulation.pnls)
+    plt.show()
