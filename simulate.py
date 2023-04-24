@@ -14,7 +14,7 @@ btc_aud_df["Mid Price"] = 0.5*btc_aud_df["High"] + 0.5*btc_aud_df["Close"]
 def simulate(trader: Trader, start=0, end=500):
     pnls = []
     position = {"BTC": 0, "AUD": 100.0}
-    trading_data = btc_aud_df.loc[start:(end - 1)]
+    trading_data = btc_aud_df.loc[start:(end - 1)].reset_index(drop=False)
     signals = trader.generate_signals(trading_data)
 
     order = 0
@@ -45,9 +45,9 @@ def simulate(trader: Trader, start=0, end=500):
     plt.show()
 
     final_close = trading_data.iloc[-1]["Close"]
-    print("Final PNL: ", position["BTC"]*final_close + position["AUD"])
+    print("Final position worth: ", position["BTC"]*final_close + position["AUD"], " AUD")
 
 
 if __name__ == "__main__":
-    macd_trader = MACDTrader()
+    macd_trader = MACDTrader(window_slow=26, window_fast=12)
     simulate(macd_trader)

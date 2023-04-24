@@ -2,5 +2,9 @@ from typing import List
 
 
 class Trader:
-    def generate_signals(self, ohlcv, **kwargs) -> List:
+
+    def __init__(self, **kwargs):
+        pass
+
+    def generate_signals(self, ohlcv) -> List:
         pass

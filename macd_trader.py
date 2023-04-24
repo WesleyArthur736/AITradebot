@@ -4,8 +4,11 @@ from models import Trader
 
 
 class MACDTrader(Trader):
-    def generate_signals(self, ohlcv, **kwargs):
-        macd_indicator = MACD(ohlcv["Mid Price"])
+    def __init__(self, **kwargs):
+        self.macd_window_slow = kwargs["window_slow"]
+        self.macd_window_fast = kwargs["window_fast"]
+    def generate_signals(self, ohlcv):
+        macd_indicator = MACD(ohlcv["Mid Price"], window_slow=self.macd_window_slow, window_fast=self.macd_window_fast)
 
         # TODO rename this first signals var
         signals = np.where(macd_indicator.macd() > macd_indicator.macd_signal(), 1.0, 0.0)
