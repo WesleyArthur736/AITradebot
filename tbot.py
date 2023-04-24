@@ -9,10 +9,12 @@ import numpy as np
 
 '''Control the whole process of generting parameters and running the bot, storing and evaluating the output'''    
 def main():
+    rnd = np.random.default_rng()
+    
     INIT_MONEY = 100.0
     SRSI_BUY = 0.2
     SRSI_SELL= 0.8
-    
+    NUM_INIT_VECTORS = 6
     
     #initialise data
     kraken_exchange = ccxt.kraken()
@@ -28,6 +30,28 @@ def main():
     rsi_ind = RSIIndicator(bitcoin_indicators['close'])
     rsi_data =rsi_ind.rsi()
 
+    # generate initial population vectors
+    vectors=np.array([])
+    for vect in range(NUM_INIT_VECTORS):
+        
+        print("vs",vectors.size)
+        win = rnd.integers(low=1, high=50)
+        smooth1 = rnd.integers(low=1, high=20)
+        smooth2  = rnd.integers(low=1, high=20)   
+        
+        vect = np.array([win,smooth1,smooth2])
+        print(vect,vectors)
+        if vectors.size == 0:
+            print("here")
+            vectors=np.append(vectors, vect, axis=0)
+        else:
+            print("made it here")
+            vectors=np.concatenate([vectors, vect], axis =0)
+    vectors = vectors.reshape(6,3)
+    print("vectors", vectors)                 
+    
+    
+    return
     bot = TradeBot(SRSI_BUY, SRSI_SELL, INIT_MONEY,14, 50, 50,bitcoin_indicators, srsi_data )
     bot.execute_period()
     print("final dump", bot.cash)
@@ -103,6 +127,12 @@ class NSGAIII:
         self.tohclv = TOHCLV
         self.srsi_data=srsi_data
         
+    def rounds(self, rounds):
+        
+        for round in range(rounds):
+            self.nondominated_sort()
+            self.mutate()
+            self.crossover()            
             
     def dominates (self, x1, x2):
         num_data_points = 100
@@ -115,40 +145,43 @@ class NSGAIII:
         
         return botx1 >= botx2
     
-    def nondominated_sort(self, pop):
-        for x_index in range(pop.to_array().shape[0]-1):
-            x1 = pop[x_index]
-            x2 = pop[x_index+1]
-            result=NSGAIII.dominates(x1, x2)
+    def nondominated_sort(self):
+        for x_index in range(self.pop.to_array().shape[0]-1):
+            x1 = self.pop[x_index]
+            x2 = self.pop[x_index+1]
+            result=self.dominates(x1, x2)
             
             if result == True:
                 continue
             else:
-                pop[x_index], pop[x_index + 1] = pop[x_index + 1], pop[x_index]
+                self.pop[x_index],self.pop[x_index + 1] = self.pop[x_index + 1], self.pop[x_index]
         
-    def mutate(self, pop):
+    def mutate(self):
         rnd = np.random.default_rng()
         window = 50
         smooth1 = 20
         smooth2 = 20
         
-        rndparameterlist = [window,smooth1, smooth2]
+        rndparameterlist = [window, smooth1, smooth2]
         rndparameterchoice = rnd.integers(low=0, high = 2)
-        newparametervalue = rnd.integers(low=0, high = rndparameterlist[rndparameterchoice])
+        newparametervalue = rnd.integers(low=1, high = rndparameterlist[rndparameterchoice])
         
         # choose random individual to mutate (not the best)
 
-        indtomut = rnd.intergers(low=1, high = len(pop))
+        indtomut = rnd.intergers(low=1, high = len(self.pop))
         
-        pop.iloc[indtomut, rndparameterchoice] = newparametervalue
-        return pop
-        
+        self.pop.iloc[indtomut, rndparameterchoice] = newparametervalue
         
         
         
-    
     def crossover(self):
-        pass
+        rnd = np.random.default_rng()
+        
+        for index in range(0, len(self.pop) -1, 2):
+            crossoverpnt = rnd.integers(low=1, high = len(self.pop.iloc[0]))
+            self.pop.iloc[index], self.pop.iloc[index + 1]= np.concatenate([self.pop.iloc[index, 0:crossoverpnt],self.pop.iloc[index+1, crossoverpnt:len(self.pop.iloc[index + 1]) +1]], axis=0),np
+                                                                            
+        np.concatenate([self.pop.iloc[index, 0:crossoverpnt],self.pop.iloc[index+1, crossoverpnt:len(self.pop.iloc[index + 1]) +1]], axis=0), np.concatenate([self.pop.iloc[index+1, 0:crossoverpnt],self.pop.iloc[index, crossoverpnt:len(self.pop.iloc[index + 1]) +1]], axis=0)
     
     def recombinant(self):
         self
