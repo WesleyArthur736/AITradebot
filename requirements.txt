@@ -1,0 +1,5 @@
+pandas~=2.0.0
+matplotlib~=3.7.1
+numpy~=1.24.3
+ta~=0.10.2
+ccxt~=3.0.75
