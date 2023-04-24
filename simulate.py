@@ -38,11 +38,11 @@ class Simulate:
             signal = signals[idx]
             # buy
             if signal == 1.0:
-                print("BUY AT ", idx)
+                # print("BUY AT ", idx)
                 order = 1
             # sell
             elif signal == -1.0:
-                print("SELL AT ", idx)
+                # print("SELL AT ", idx)
                 order = -1
 
             self.net_worth = self.position["BTC"] * row["Close"] + self.position["AUD"]
@@ -50,8 +50,9 @@ class Simulate:
 
 
 if __name__ == "__main__":
-    macd_trader = MACDTrader(window_slow=26, window_fast=12)
-    simulation = Simulate(trader=macd_trader)
+    macd_trader = MACDTrader(window_slow=44, window_fast=7)
+    simulation = Simulate(trader=macd_trader, start=501, end=600)
     simulation.run_simulation()
     plt.plot(simulation.pnls)
     plt.show()
+    print(simulation.net_worth)
