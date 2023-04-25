@@ -3,6 +3,7 @@ import ccxt
 from ta.volatility import BollingerBands
 from ta.momentum import RSIIndicator, StochRSIIndicator
 from ta.volume import ChaikinMoneyFlowIndicator
+from ta.trend import MACD
 import pandas as pd
 import numpy as np
 
@@ -29,7 +30,14 @@ def main():
     srsi_data= srsi_ind.stochrsi()
     rsi_ind = RSIIndicator(bitcoin_indicators['close'])
     rsi_data =rsi_ind.rsi()
-
+    macd_ind = MACD(bitcoin_indicators['close'])
+    macd_line = macd_ind.macd()
+    macd_sig = macd_ind.macd_signal()
+    
+    print("macdl",macd_line)
+    print("MSignal",macd_sig)
+    
+    '''
     # generate initial population vectors
     vectors=np.array([])
     for vect in range(NUM_INIT_VECTORS):
@@ -49,17 +57,17 @@ def main():
             vectors=np.concatenate([vectors, vect], axis =0)
     vectors = vectors.reshape(6,3)
     print("vectors", vectors)                 
+    '''
     
     
-    return
-    bot = TradeBot(SRSI_BUY, SRSI_SELL, INIT_MONEY,14, 50, 50,bitcoin_indicators, srsi_data )
+    bot = TradeBot(SRSI_BUY, SRSI_SELL, INIT_MONEY,14, 50, 50,bitcoin_indicators, macd_line, macd_sig, srsi_data )
     bot.execute_period()
     print("final dump", bot.cash)
     #nsga3 = NSGAIII()
     
 
 class TradeBot:
-    def __init__ (self, SRSI_buy, SRSI_sell, Money, SRSI_window, SRSI_smooth1, SRSI_smooth2, TOHCLV_data, srsi_data):
+    def __init__ (self, SRSI_buy, SRSI_sell, Money, SRSI_window, SRSI_smooth1, SRSI_smooth2, TOHCLV_data, macdl_data, macds_data, srsi_data):
         print(type(Money))
         self.buy_trigger = SRSI_buy
         self.sell_trigger =SRSI_sell
@@ -69,6 +77,8 @@ class TradeBot:
         self.smooth2 = SRSI_smooth2
         self.tohclv = TOHCLV_data
         self.srsidata = srsi_data
+        self.macd_line_data = macdl_data
+        self.macd_signal_data = macds_data
         # set initial bprint(type(Money))itcoins to zero
         self.coins = 0
         print("buy_trig: ", self.buy_trigger)
@@ -84,6 +94,8 @@ class TradeBot:
         sell_trigger_status = False
         
         for day in range(len(self.tohclv)):
+            macd_line_reading=self.macd_line_data[day]
+            macd_signal_reading = self.macd_signal_data[day]
             srsi_reading=self.srsidata[day]
             
             
@@ -92,12 +104,12 @@ class TradeBot:
             #print("current price", current_price[day])
             print(day, " srsi", srsi_reading, "bot: ",self.cash, " bitcoins: ", self.coins,"current_price", current_price[day])
             # sell trigger
-            if srsi_reading >= self.sell_trigger:
+            if macd_line_reading > 0 and macd_line_reading > macd_signal_reading and srsi_reading >= self.sell_trigger:
                 sell_trigger_status = True
                 buy_trigger_status = False
             
             #buy trigger
-            elif srsi_reading <= self.buy_trigger:
+            elif macd_line_reading < 0 and macd_line_reading < macd_signal_reading and srsi_reading <= self.buy_trigger:
                 buy_trigger_status = True
                 sell_trigger_status = False
             
