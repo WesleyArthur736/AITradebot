@@ -51,7 +51,7 @@ class Simulate:
 
 if __name__ == "__main__":
     macd_trader = MACDTrader(window_slow=44, window_fast=7)
-    simulation = Simulate(trader=macd_trader, start=501, end=600)
+    simulation = Simulate(trader=macd_trader, start=0, end=500)
     simulation.run_simulation()
     plt.plot(simulation.pnls)
     plt.show()
