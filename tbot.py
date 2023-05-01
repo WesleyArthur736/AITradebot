@@ -74,6 +74,9 @@ def main():
     evopop.nondominated_sort()
     print("original pop: ", epop)
     print("final pop: ", evopop.pop)
+    eopo1 =evopop.pop.copy()
+    evopop.mutate()
+    print("mutated", evopop.pop)
     
     return
     bot = TradeBot(RSI_BUY, RSI_SELL, SRSI_BUY, SRSI_SELL, INIT_MONEY,14, 50, 50,bitcoin_indicators, macd_line, macd_sig, rsi_data, srsi_data )
@@ -231,26 +234,28 @@ class EA:
             if result == True:
                 print("making it to here")
                 self.pop[[x_index, x_index+1]] = self.pop[[x_index + 1, x_index]]
-                print("Immediate",self.pop)
             else:
-                print("made it to continue")
                 continue
                 
     def mutate(self):
         rnd = np.random.default_rng()
-        window = 50
-        smooth1 = 20
-        smooth2 = 20
+        srsi_window = 50
+        srsi_smooth1 = 20
+        srsi_smooth2 = 20
+        rsi_window = 30
+        macd_windowfast = 50
+        macd_windowslow = 20
+        macd_windowsignal = 10
         
-        rndparameterlist = [window, smooth1, smooth2]
-        rndparameterchoice = rnd.integers(low=0, high = 2)
+        rndparameterlist = [srsi_window, srsi_smooth1, srsi_smooth2, rsi_window, macd_windowfast, macd_windowslow, macd_windowsignal]
+        rndparameterchoice = rnd.integers(low=0, high = 6)
         newparametervalue = rnd.integers(low=1, high = rndparameterlist[rndparameterchoice])
         
         # choose random individual to mutate (not the best)
 
-        indtomut = rnd.intergers(low=1, high = len(self.pop))
+        indtomut = rnd.integers(low=1, high = len(self.pop))
         
-        self.pop.iloc[indtomut, rndparameterchoice] = newparametervalue
+        self.pop[indtomut, rndparameterchoice] = newparametervalue
         
         
         
