@@ -1,5 +1,6 @@
 from macd_trader import MACDTrader
 from simulate import Simulate
+from vwap_trader import VWAPTrader
 
 macd_trader_1 = MACDTrader(window_slow=26, window_fast=12)
 macd_trader_2 = MACDTrader(window_slow=30, window_fast=10)
@@ -31,3 +32,18 @@ for i in range(20,50):
 print(max_net_worth)
 print(best_i)
 print(best_j)
+
+
+# Optimise VWAP window
+max_net_worth = 0
+best_i = 0
+for i in range(1,50):
+    macd_trader = VWAPTrader(vwap_window=i)
+    simulation = Simulate(trader=macd_trader)
+    simulation.run_simulation()
+    if simulation.net_worth > max_net_worth:
+        max_net_worth = simulation.net_worth
+        best_i = i
+
+print(max_net_worth)
+print(best_i)

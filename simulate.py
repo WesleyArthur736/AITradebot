@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from macd_trader import MACDTrader
+from vwap_trader import VWAPTrader
 from models import Trader
 
 
@@ -52,7 +53,8 @@ class Simulate:
 
 if __name__ == "__main__":
     macd_trader = MACDTrader(window_slow=26, window_fast=12)
-    simulation = Simulate(trader=macd_trader, start=0, end=500)
+    vwap_trader = VWAPTrader(vwap_window=14)
+    simulation = Simulate(trader=vwap_trader, start=0, end=500, fee=0)
     simulation.run_simulation()
     plt.plot(simulation.pnls)
     plt.show()
