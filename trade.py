@@ -5,7 +5,7 @@ import pandas as pd
 
 def get_data():
     exchange = ccxt.kraken()
-    bars = exchange.fetch_ohlcv('BTC/AUD', timeframe="1d", limit=720)
+    bars = exchange.fetch_ohlcv("BTC/AUD", timeframe="1d", limit=720)
     df = pd.DataFrame(
         bars, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
     df['next_day_open'] = df['open'].shift(-1)
@@ -24,37 +24,38 @@ def execute_trades(trade_signals, fee_percentage):
     aud_balance = 100.00
     btc_balance = 0.00
 
-    last_trade = -1
+    last_trade = "sell"
 
     # For each day:
     for index, row in trade_results.iterrows():
-        trading_signal = row["trade_signal"]
+        buy_signal = row["buy_signal"]
+        sell_signal = row["sell_signal"]
         next_day_open_price = row["next_day_open"]
 
         # Records daily portfolio value in AUD at market close.
-        if aud_balance == 0:
+        if last_trade == "buy":
             trade_results.at[index,
                              "portfolio_value"] = btc_balance * row["close"]
-        else:
+        elif last_trade == "sell":
             trade_results.at[index, "portfolio_value"] = aud_balance
 
         # Executes trade at following day's open price if today's data results in trade signal.
-        if trading_signal == 1 and last_trade == -1:  # Buy signal
+        if buy_signal == True and last_trade == "sell":  # Buy signal
             # Converts all AUD to BTC using the next day's open price and applies percentage fee.
             btc_balance = aud_balance / \
                 next_day_open_price * (1 - fee_percentage)
             aud_balance = 0
-            last_trade = 1
+            last_trade = "buy"
 
-        elif trading_signal == -1 and last_trade == 1:  # Sell signal
+        elif sell_signal == True and last_trade == "buy":  # Sell signal
             # Converts all BTC to AUD using the next day's open price and applies percentage fee.
             aud_balance = btc_balance * \
                 next_day_open_price * (1 - fee_percentage)
             btc_balance = 0
-            last_trade = -1
+            last_trade = "sell"
 
     # Converts final holdings to AUD using final day's open price if final holdings are in BTC.
-    if aud_balance == 0:
+    if last_trade == "buy":
         last_close_price = trade_results["next_day_open"].iloc[-1]
         aud_balance = btc_balance * last_close_price * (1 - fee_percentage)
         btc_balance = 0
