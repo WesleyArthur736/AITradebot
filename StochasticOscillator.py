@@ -5,31 +5,27 @@ import numpy as np
 import copy
 
 def main():
-    STOCH_OSCILL_WINDOW = 14
+    STOCH_OSCILL_WINDOW = 20
     STOCH__OSCILL_WINDOW = 3
     MONEY = 100
     
     bitcoin_data, sosc_data, so_signal = set_up_objects([STOCH_OSCILL_WINDOW, STOCH__OSCILL_WINDOW])
     soscill_bot = stochasticOscillator(bitcoin_data, sosc_data, so_signal, MONEY)
     
-    sell_triggers, buy_triggers = soscill_bot.get_triggers()
-    orders = soscill_bot.formulate_orders(sell_triggers, buy_triggers)
-    portfolio_hist, ndo = soscill_bot.execute(orders)
+    #sell_triggers, buy_triggers 
+    #orders = soscill_bot.formulate_orders(sell_triggers, buy_triggers)
+    ndo, sell_signal, buy_signal = soscill_bot.execute()
     bitcoin_data= bitcoin_data[0:719]
     
-    orders.reset_index(drop=True,inplace=True)
-    portfolio_hist.reset_index(drop=True,inplace=True)
+    buy_signal.reset_index(drop=True,inplace=True)
+    sell_signal.reset_index(drop=True,inplace=True)
     ndo.reset_index(drop=True,inplace=True)
     
-    bot_data = pd.concat([bitcoin_data, ndo, orders, portfolio_hist], axis = 1)
+    bot_data = pd.concat([bitcoin_data, ndo, buy_signal, sell_signal], axis = 1)
     print(bot_data)
     
     return bot_data
-    '''
-    stochOsc = StochasticOscillator(bitcoin_indicators['close'],bitcoin_indicators['high'],bitcoin_indicators['low'])
-    sosc_data = stochOsc.stoch()
-    so_signal = stochOsc.stoch_signal()
-    '''
+    
     
     
     
@@ -116,38 +112,50 @@ class stochasticOscillator:
         
         return pd.Series(orders.astype(int), name ="trade_signal")
     
-    def execute(self, orders):
+    def execute(self):
+        STOCH_OSCILL_OVERBOUGHT = 80
+        STOCH_OSCILL_OVERSOLD = 20
         portfolio_value=[]
+        sell_signal = []
+        buy_signal = []
+        sosc= self.stochOsc.to_numpy()
+        so_s= self.so_signal.to_numpy()
+        
         ndo = self.bitcoin_Data['open'][1:720]
         print(ndo)
-        for ord in orders:
-            print("orders", ord)
+        
         
         # but Trigger
-        for commd_idx in range(len(orders)):
-            
+        for day in range(len(ndo)):
+            crossover=[sosc[day] > so_s[day], sosc[day+1] > so_s[day+1]]
+
+            buy_trigger = sosc[day] < STOCH_OSCILL_OVERSOLD and (crossover[0] == False and crossover[1] == True )
+            sell_trigger = sosc[day] > STOCH_OSCILL_OVERBOUGHT and (crossover[0] == True and crossover[1] == False)
+
             #buy_trigger
-            if orders[commd_idx] == 1 and self.cash > 0:
+            if buy_trigger == True and self.cash > 0:
                 available_funds = self.cash - (self.cash/50)
-                self.coins = float(self.coins + (available_funds/ ndo.iloc[commd_idx]))
+                self.coins = float(self.coins + (available_funds/ ndo.iloc[day]))
                 self.cash = 0 
             # sell trigger  
-            elif orders[commd_idx] == -1 and self.coins > 0:
-                potential_funds= ndo.iloc[commd_idx] * self.coins
+            elif sell_trigger == True and self.coins > 0:
+                potential_funds= ndo.iloc[day] * self.coins
                 funds_gained = potential_funds - (potential_funds/50)
                 self.cash = float(self.cash + funds_gained)
                 self.coins = 0
             portfolio_value.append(self.cash)
+            buy_signal.append(buy_trigger)
+            sell_signal.append(sell_trigger)
                 
         if self.coins > 0:
-            self.cash = float(self.cash + (ndo.iloc[commd_idx] * self.coins))
+            self.cash = float(self.cash + (ndo.iloc[day] * self.coins))
             self.coins = 0   
             portfolio_value[len(portfolio_value)-1] = self.cash
         print(self.cash,self.coins)
         
         
         
-        return pd.Series(portfolio_value, name="portfolio_value"), pd.Series(ndo, name = "next_day_open")
+        return pd.Series(ndo, name = "next_day_open"), pd.Series(buy_signal, name="buy_signal"), pd.Series(sell_signal, name="sell_signal")
     
         
 main()
