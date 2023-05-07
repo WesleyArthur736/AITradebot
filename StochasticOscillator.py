@@ -6,7 +6,7 @@ import copy
 
 def main():
     STOCH_OSCILL_WINDOW = 14
-    STOCH__OSCILL_WINDOW =3
+    STOCH__OSCILL_WINDOW = 3
     MONEY = 100
     
     bitcoin_data, sosc_data, so_signal = set_up_objects([STOCH_OSCILL_WINDOW, STOCH__OSCILL_WINDOW])
@@ -14,14 +14,24 @@ def main():
     
     sell_triggers, buy_triggers = soscill_bot.get_triggers()
     orders = soscill_bot.formulate_orders(sell_triggers, buy_triggers)
-    soscill_bot.execute(orders)
+    portfolio_hist, ndo = soscill_bot.execute(orders)
+    bitcoin_data= bitcoin_data[0:719]
+    
+    orders.reset_index(drop=True,inplace=True)
+    portfolio_hist.reset_index(drop=True,inplace=True)
+    ndo.reset_index(drop=True,inplace=True)
+    
+    bot_data = pd.concat([bitcoin_data, ndo, orders, portfolio_hist], axis = 1)
+    print(bot_data)
+    
+    return bot_data
     '''
     stochOsc = StochasticOscillator(bitcoin_indicators['close'],bitcoin_indicators['high'],bitcoin_indicators['low'])
     sosc_data = stochOsc.stoch()
     so_signal = stochOsc.stoch_signal()
     '''
     
-    #act_crossover = so_crossover_sig[so_crossover_sig==act_crossover]
+    
     
 
 def set_up_objects(lst):
@@ -43,9 +53,10 @@ class stochasticOscillator:
         self.stochOsc= sosc_data
         self.so_signal= so_signal
         self.cash= MONEY
+        self.coins = 0
         
     def get_triggers(self):
-        close_price = self.bitcoin_Data['close']
+        
         sell_triggers = []
         buy_triggers = []
         sosc= self.stochOsc.to_numpy()
@@ -87,42 +98,56 @@ class stochasticOscillator:
         
         return sell_triggers,buy_triggers 
     
+        
+    
     def formulate_orders(self, sell_triggers,buy_triggers):
-        orders = np.zeros((720))
-        for tup in sell_triggers:
-            print("tup",tup[0])
+        NO_DAYS_TRADE = 719
+        orders = np.zeros((NO_DAYS_TRADE))
+        for tup in buy_triggers:
+            if tup[0] < NO_DAYS_TRADE:
+                
+                print("tup",tup[0])
             
-            orders[tup[0]]=tup[1]
+                orders[tup[0]]=tup[1]
                 
         for tup in sell_triggers:
-            
-            orders[tup[0]]=tup[1]
+            if tup[0] < NO_DAYS_TRADE:
+                orders[tup[0]]=tup[1]
         
         return pd.Series(orders.astype(int), name ="trade_signal")
     
     def execute(self, orders):
-        current_money=[]
-        ndot = self.bitcoin_Data['open'][1:719]
-        print(ndot)
-        return
-    '''
-        if sell_trigger_status == True and self.coins > 0:
-                potential_funds= current_price.iloc[day] * self.coins
+        portfolio_value=[]
+        ndo = self.bitcoin_Data['open'][1:720]
+        print(ndo)
+        for ord in orders:
+            print("orders", ord)
+        
+        # but Trigger
+        for commd_idx in range(len(orders)):
+            
+            #buy_trigger
+            if orders[commd_idx] == 1 and self.cash > 0:
+                available_funds = self.cash - (self.cash/50)
+                self.coins = float(self.coins + (available_funds/ ndo.iloc[commd_idx]))
+                self.cash = 0 
+            # sell trigger  
+            elif orders[commd_idx] == -1 and self.coins > 0:
+                potential_funds= ndo.iloc[commd_idx] * self.coins
                 funds_gained = potential_funds - (potential_funds/50)
                 self.cash = float(self.cash + funds_gained)
                 self.coins = 0
+            portfolio_value.append(self.cash)
                 
-                
-            elif buy_trigger_status == True:
-                available_funds = self.cash - (self.cash/50)
-                self.coins = float(self.coins + (available_funds/ current_price.iloc[day]))
-                self.cash = 0 #float((self.cash - (self.cash//current_price[day]) * current_price[day]))
-                
-            print("prev trans", previous_transaction_day,"day", day)
-            
         if self.coins > 0:
-            self.cash = float(self.cash + (current_price.iloc[day] * self.coins))
-            self.coins = 0
-            '''
+            self.cash = float(self.cash + (ndo.iloc[commd_idx] * self.coins))
+            self.coins = 0   
+            portfolio_value[len(portfolio_value)-1] = self.cash
+        print(self.cash,self.coins)
+        
+        
+        
+        return pd.Series(portfolio_value, name="portfolio_value"), pd.Series(ndo, name = "next_day_open")
+    
         
 main()
