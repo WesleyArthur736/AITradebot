@@ -118,9 +118,9 @@ class MACD_Trading_Bot:
 
         for index, row in trade_signals.iloc[1:].iterrows():
             # Evaluates literals. 
-            MACD_histogram_was_negative = trade_signals.at[index - 1, "MACD_histogram"] < 0
+            MACD_histogram_was_negative = 0 > trade_signals.at[index - 1, "MACD_histogram"]
             MACD_histpgram_was_positive = trade_signals.at[index - 1, "MACD_histogram"] > 0
-            MACD_histogram_now_negative = trade_signals.at[index, "MACD_histogram"] < 0
+            MACD_histogram_now_negative = 0 > trade_signals.at[index, "MACD_histogram"] 
             MACD_histogram_now_positive = trade_signals.at[index, "MACD_histogram"] > 0
             
             # Evaluates DNF formulas to determine buy and sell signals. 
