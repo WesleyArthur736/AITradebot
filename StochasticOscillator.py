@@ -5,16 +5,20 @@ import numpy as np
 import copy
 
 def main():
-    STOCH_OSCILL_WINDOW = 20
-    STOCH__OSCILL_WINDOW = 3
+    STOCH_OSCILL_WINDOW = 14
+    STOCH_SIGNAL_WINDOW = 3
     MONEY = 100
     
-    bitcoin_data, sosc_data, so_signal = set_up_objects([STOCH_OSCILL_WINDOW, STOCH__OSCILL_WINDOW])
-    soscill_bot = stochasticOscillator(bitcoin_data, sosc_data, so_signal, MONEY)
-    
+    soscill_bot = stochasticOscillator(STOCH_OSCILL_WINDOW, STOCH_SIGNAL_WINDOW)
+    #soscill_bot = stochasticOscillator(bitcoin_data, sosc_data, so_signal, MONEY)
+    bitcoin_data, sosc_data, so_signal = soscill_bot.get_data()
+    print(type(sosc_data), type(so_signal))
+    sosc_data = pd.Series(sosc_data, name="Osc_data")
+    so_signal = pd.Series(so_signal, name="Osc_signal")
+    bitcoin_data = pd.concat([bitcoin_data, sosc_data, so_signal],axis=1)
     #sell_triggers, buy_triggers 
     #orders = soscill_bot.formulate_orders(sell_triggers, buy_triggers)
-    ndo, sell_signal, buy_signal = soscill_bot.execute()
+    ndo, sell_signal, buy_signal = soscill_bot.execute_trades(bitcoin_data, 0.02)
     bitcoin_data= bitcoin_data[0:719]
     
     buy_signal.reset_index(drop=True,inplace=True)
@@ -29,7 +33,7 @@ def main():
     
     
     
-
+'''
 def set_up_objects(lst):
     kraken_exchange = ccxt.kraken()
     kraken_market = kraken_exchange.load_markets()
@@ -42,14 +46,37 @@ def set_up_objects(lst):
     so_signal = stochOsc.stoch_signal()
     
     return bitcoin_indicators, sosc_data, so_signal
+'''
 
 class stochasticOscillator:
-    def __init__(self,bitcoin_data, sosc_data, so_signal, MONEY ):
+    def __init__(self,STOCH_OSCILL_WINDOW, STOCH_SIGNAL_WINDOW):
+        STARTING_CASH = 100
+        self.window = STOCH_OSCILL_WINDOW
+        self.signal = STOCH_SIGNAL_WINDOW
+        
+        self.cash= STARTING_CASH
+        self.coins = 0
+        '''
         self.bitcoin_Data =bitcoin_data
         self.stochOsc= sosc_data
         self.so_signal= so_signal
-        self.cash= MONEY
-        self.coins = 0
+        self.stochOsc=None
+        self.so_signal=None
+        
+        '''
+        
+    def get_data(self):
+        kraken_exchange = ccxt.kraken()
+        kraken_market = kraken_exchange.load_markets()
+        
+        bitcoin_data = kraken_exchange.fetch_ohlcv("BTC/AUD", timeframe="1d", limit = 720)
+        bitcoin_indicators = pd.DataFrame(bitcoin_data, columns = ["timestamp","open", "high", "low", "close", "volume"])
+        
+        StochOsc = StochasticOscillator(bitcoin_indicators['close'],bitcoin_indicators['high'],bitcoin_indicators['low'],window=self.window,smooth_window=self.signal)
+        stochOsc = StochOsc.stoch()
+        so_signal = StochOsc.stoch_signal()
+        
+        return bitcoin_indicators, stochOsc, so_signal
         
     def get_triggers(self):
         
@@ -112,16 +139,16 @@ class stochasticOscillator:
         
         return pd.Series(orders.astype(int), name ="trade_signal")
     
-    def execute(self):
+    def execute_trades(self, trade_signals, fee_percentage):
         STOCH_OSCILL_OVERBOUGHT = 80
         STOCH_OSCILL_OVERSOLD = 20
         portfolio_value=[]
         sell_signal = []
         buy_signal = []
-        sosc= self.stochOsc.to_numpy()
-        so_s= self.so_signal.to_numpy()
+        sosc= trade_signals["Osc_data"].to_numpy()
+        so_s= trade_signals["Osc_signal"].to_numpy()
         
-        ndo = self.bitcoin_Data['open'][1:720]
+        ndo = trade_signals['open'][1:720]
         print(ndo)
         
         
@@ -134,13 +161,13 @@ class stochasticOscillator:
 
             #buy_trigger
             if buy_trigger == True and self.cash > 0:
-                available_funds = self.cash - (self.cash/50)
+                available_funds = self.cash - (self.cash*fee_percentage)
                 self.coins = float(self.coins + (available_funds/ ndo.iloc[day]))
                 self.cash = 0 
             # sell trigger  
             elif sell_trigger == True and self.coins > 0:
                 potential_funds= ndo.iloc[day] * self.coins
-                funds_gained = potential_funds - (potential_funds/50)
+                funds_gained = potential_funds - (potential_funds*fee_percentage)
                 self.cash = float(self.cash + funds_gained)
                 self.coins = 0
             portfolio_value.append(self.cash)
@@ -153,7 +180,8 @@ class stochasticOscillator:
             portfolio_value[len(portfolio_value)-1] = self.cash
         print(self.cash,self.coins)
         
-        
+        trade_signals.drop("Osc_data", axis =1, inplace =True)
+        trade_signals.drop("Osc_signal", axis =1, inplace =True)
         
         return pd.Series(ndo, name = "next_day_open"), pd.Series(buy_signal, name="buy_signal"), pd.Series(sell_signal, name="sell_signal")
     
