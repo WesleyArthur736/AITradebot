@@ -3,6 +3,8 @@ import bots
 def main():
     ohlcv_df = bots.get_daily_ohlcv_data()
 
+    print(ohlcv_df)
+
     print("MACD Trading Bot")
     trade_signals = bots.MACD_Trading_Bot(slow_window = 26, fast_window = 12, signal_window = 9).determine_MACD_signals(ohlcv_df)
     print()
