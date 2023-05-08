@@ -4,6 +4,7 @@ from ta.trend import MACD
 from ta.volatility import BollingerBands
 import matplotlib.pyplot as plt
 
+# timestamp open low high close volume next_day_open buy_signal sell_signal
 
 
 def get_daily_ohlcv_data():
@@ -91,6 +92,7 @@ def plot_trading_simulation(trade_results):
 
 
 class MACD_Trading_Bot:
+    
     def __init__(self, slow_window, fast_window, signal_window):
         self.SLOW_WINDOW = slow_window
         self.FAST_WINDOW = fast_window
