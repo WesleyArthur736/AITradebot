@@ -289,10 +289,11 @@ class ensemble_bot(Bot):
 
         for parameter_list in self.all_parameters:
             # Get the bot name and remove it from the dictionary.
-            bot_name = parameter_list.pop('bot_name')
+            parameter_list_copy = dict(parameter_list)
+            bot_name = parameter_list_copy.pop('bot_name')
             self.strategy_names.append(bot_name)
             # Initialize the bot with its specified parameters and save output signals dataframe.
-            signals_df = globals()[bot_name](self.ohlcv_df, **parameter_list).generate_signals()
+            signals_df = globals()[bot_name](self.ohlcv_df, **parameter_list_copy).generate_signals()
             all_bot_signals[bot_name] = signals_df
 
         return all_bot_signals
