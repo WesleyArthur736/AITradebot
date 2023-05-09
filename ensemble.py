@@ -58,32 +58,29 @@ def construct_dnf(trade_type):
     
     return dnf
 
-# Create random DNF expression for buy signal.
-buy_dnf = construct_dnf(trade_type = "buy")
-print(buy_dnf)
 
-# Evaluate DNF expression for each day of data and save to dataframe.
-for index, row in ohlcv_df.iterrows():
-    buy_dnf_with_index = buy_dnf.replace("index", str(index))
-    buy_signal = eval(buy_dnf_with_index)
-    ohlcv_df.at[index, "buy_signal"] = buy_signal 
+if __name__ == "__main__":
+    # Create random DNF expression for buy signal.
+    buy_dnf = construct_dnf(trade_type = "buy")
+    print(buy_dnf)
 
-# Create random DNF expression for sell signal.
-sell_dnf = construct_dnf(trade_type = "sell")
-print(sell_dnf)
+    # Evaluate DNF expression for each day of data and save to dataframe.
+    for index, row in ohlcv_df.iterrows():
+        buy_dnf_with_index = buy_dnf.replace("index", str(index))
+        buy_signal = eval(buy_dnf_with_index)
+        ohlcv_df.at[index, "buy_signal"] = buy_signal 
 
-# Evaluate DNF expression for each day of data and save to dataframe.
-for index, row in ohlcv_df.iterrows(): 
-    sell_dnf_with_index = sell_dnf.replace("index", str(index))
-    sell_signal = eval(sell_dnf_with_index)
-    ohlcv_df.at[index, "sell_signal"] = sell_signal 
+    # Create random DNF expression for sell signal.
+    sell_dnf = construct_dnf(trade_type = "sell")
+    print(sell_dnf)
 
+    # Evaluate DNF expression for each day of data and save to dataframe.
+    for index, row in ohlcv_df.iterrows(): 
+        sell_dnf_with_index = sell_dnf.replace("index", str(index))
+        sell_signal = eval(sell_dnf_with_index)
+        ohlcv_df.at[index, "sell_signal"] = sell_signal 
 
-
-
-
-
-final_balance, trade_results = functions.execute_trades(ohlcv_df, 0.02)
-functions.plot_trading_simulation(trade_results)
+    final_balance, trade_results = functions.execute_trades(ohlcv_df, 0.02)
+    functions.plot_trading_simulation(trade_results)
 
 

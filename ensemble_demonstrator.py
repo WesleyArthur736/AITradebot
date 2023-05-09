@@ -17,9 +17,9 @@ def main():
     # ^ These parameters should be determined by the GA. Once they've been optimised, they can be fed to the ensembler.
 
     all_bot_signals = functions.Ensemble(ohlcv_df).determine_bot_signals(all_parameters)
+
     print(all_bot_signals)
 
+if __name__ == "__main__":
+    main()
 
-
-
-main()
