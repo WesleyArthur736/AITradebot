@@ -6,93 +6,90 @@ from ta.momentum import RSIIndicator
 from ta.volume import VolumeWeightedAveragePrice
 from ta.momentum import StochasticOscillator
 import matplotlib.pyplot as plt
-import random
 
 
-class Simulate:
-    def __init__(self):
-        pass
 
-    def get_daily_ohlcv_data():
-        """ Fetches the most recent 720 days of OHLCV data on BTC/AUD from Kraken.
-            Converts data into a Pandas DataFrame with column titles.
-            Alters and returns the DataFrame for further analysis.
-        """
-        exchange = kraken()
-        ohlcv_data = exchange.fetch_ohlcv("BTC/AUD", timeframe="1d", limit = 720)
-        ohlcv_df = DataFrame(ohlcv_data, columns = ["timestamp","open", "high", "low", "close", "volume"])
-        ohlcv_df["next_day_open"] = ohlcv_df["open"].shift(-1)     # Adds column for next day's open price.
-        ohlcv_df = ohlcv_df.iloc[:-1]    # Removes last day's data as the bot cannot trade the next day.
+def get_daily_ohlcv_data():
+    """ Fetches the most recent 720 days of OHLCV data on BTC/AUD from Kraken.
+        Converts data into a Pandas DataFrame with column titles.
+        Alters and returns the DataFrame for further analysis.
+    """
+    exchange = kraken()
+    ohlcv_data = exchange.fetch_ohlcv("BTC/AUD", timeframe="1d", limit = 720)
+    ohlcv_df = DataFrame(ohlcv_data, columns = ["timestamp","open", "high", "low", "close", "volume"])
+    ohlcv_df["next_day_open"] = ohlcv_df["open"].shift(-1)     # Adds column for next day's open price.
+    ohlcv_df = ohlcv_df.iloc[:-1]    # Removes last day's data as the bot cannot trade the next day.
 
-        return ohlcv_df
+    return ohlcv_df
 
 
-    def execute_trades(trade_signals, fee_percentage):
-        """ Executes all of the identified trade signals sequentially.
-            Ensures the final holdings are in AUD.
-            Returns the trading account's final balance in AUD.
-        """
-        trade_results = trade_signals.copy()
-        trade_results["portfolio_value"] = 0
 
-        aud_balance = 100.00
-        btc_balance = 0.00
+def execute_trades(trade_signals, fee_percentage):
+    """ Executes all of the identified trade signals sequentially.
+        Ensures the final holdings are in AUD.
+        Returns the trading account's final balance in AUD.
+    """
+    trade_results = trade_signals.copy()
+    trade_results["portfolio_value"] = 0
 
-        last_trade = "sell"
+    aud_balance = 100.00
+    btc_balance = 0.00
 
-        # For each day:
-        for index, row in trade_results.iterrows():
-            buy_signal = row["buy_signal"]
-            sell_signal = row["sell_signal"]
-            next_day_open_price = row["next_day_open"]
-        
-            # Records daily portfolio value in AUD at market close.
-            if last_trade == "buy": 
-                trade_results.at[index, "portfolio_value"] = btc_balance * row["close"]
-            elif last_trade == "sell":
-                trade_results.at[index, "portfolio_value"] = aud_balance
+    last_trade = "sell"
 
-            # Executes trade at following day's open price if today's data results in trade signal.
-            if buy_signal == True and last_trade == "sell":  # Buy signal
-                # Converts all AUD to BTC using the next day's open price and applies percentage fee.
-                btc_balance = aud_balance / next_day_open_price * (1 - fee_percentage)
-                aud_balance = 0
-                last_trade = "buy"
+    # For each day:
+    for index, row in trade_results.iterrows():
+        buy_signal = row["buy_signal"]
+        sell_signal = row["sell_signal"]
+        next_day_open_price = row["next_day_open"]
+    
+        # Records daily portfolio value in AUD at market close.
+        if last_trade == "buy": 
+            trade_results.at[index, "portfolio_value"] = btc_balance * row["close"]
+        elif last_trade == "sell":
+            trade_results.at[index, "portfolio_value"] = aud_balance
 
-            elif sell_signal == True and last_trade == "buy":  # Sell signal
-                # Converts all BTC to AUD using the next day's open price and applies percentage fee.
-                aud_balance = btc_balance * next_day_open_price * (1 - fee_percentage)
-                btc_balance = 0
-                last_trade = "sell"
+        # Executes trade at following day's open price if today's data results in trade signal.
+        if buy_signal == True and last_trade == "sell":  # Buy signal
+            # Converts all AUD to BTC using the next day's open price and applies percentage fee.
+            btc_balance = aud_balance / next_day_open_price * (1 - fee_percentage)
+            aud_balance = 0
+            last_trade = "buy"
 
-        # Converts final holdings to AUD using final day's open price if final holdings are in BTC.
-        if last_trade == "buy":
-            last_close_price = trade_results["next_day_open"].iloc[-1]
-            aud_balance = btc_balance * last_close_price * (1 - fee_percentage)
+        elif sell_signal == True and last_trade == "buy":  # Sell signal
+            # Converts all BTC to AUD using the next day's open price and applies percentage fee.
+            aud_balance = btc_balance * next_day_open_price * (1 - fee_percentage)
             btc_balance = 0
+            last_trade = "sell"
 
-        return aud_balance, trade_results
+    # Converts final holdings to AUD using final day's open price if final holdings are in BTC.
+    if last_trade == "buy":
+        last_close_price = trade_results["next_day_open"].iloc[-1]
+        aud_balance = btc_balance * last_close_price * (1 - fee_percentage)
+        btc_balance = 0
+
+    return aud_balance, trade_results
 
 
-    def plot_trading_simulation(trade_results):
-        # Create a figure and axis
-        fig, ax = plt.subplots()
 
-        # Set the x-axis data (day of trading) and y-axis data (portfolio value in AUD at close)
-        x_data = trade_results.index
-        y_data = trade_results["portfolio_value"]
+def plot_trading_simulation(trade_results):
+    # Create a figure and axis
+    fig, ax = plt.subplots()
 
-        # Plot the data
-        ax.plot(x_data, y_data)
+    # Set the x-axis data (day of trading) and y-axis data (portfolio value in AUD at close)
+    x_data = trade_results.index
+    y_data = trade_results["portfolio_value"]
 
-        # Set the labels and title
-        ax.set_xlabel("Day of Trading")
-        ax.set_ylabel("Portfolio Value in AUD at Close")
-        ax.set_title("Trading Simulation Results")
+    # Plot the data
+    ax.plot(x_data, y_data)
 
-        # Display the plot
-        plt.show()
+    # Set the labels and title
+    ax.set_xlabel("Day of Trading")
+    ax.set_ylabel("Portfolio Value in AUD at Close")
+    ax.set_title("Trading Simulation Results")
 
+    # Display the plot
+    plt.show()
 
 
 class Bots:
@@ -292,43 +289,8 @@ class Bots:
         trade_signals = trade_signals.drop(columns=["stoch_oscillator", "stoch_signal"])
 
         return trade_signals
-    
 
-class Ensemble:
-    def __init__(self, ohlcv_df):
-        self.ohlcv_df = ohlcv_df
-    
-    def determine_bot_signals(self, all_parameters):
-        all_bot_signals = {}
-        strategy_names = []
 
-        for parameter_list in all_parameters:
-            # Get the bot name and remove it from the dictionary.
-            bot_name = parameter_list.pop('bot_name')
-            strategy_names.append(bot_name)
-            # Run the bot with its specified parameters and save output signals dataframe.
-            signals_df = getattr(Bots(self.ohlcv_df), bot_name)(**parameter_list)
-            all_bot_signals[bot_name] = signals_df
 
-        return all_bot_signals, strategy_names
-    
-
-    def construct_conjunction(self, strategy_names, trade_type, min_literals, max_literals):
-        # Chooses the strategies used in the conjunction.
-        number_of_strategies_included = random.randint(min_literals, max_literals)
-        strategies_used = random.sample(strategy_names, number_of_strategies_included)
-
-        # Constructs the conjunction by ANDing the signals from the selected strategies.
-        buy_signals = []
-        for strategy_name in strategies_used:
-            buy_signal = f"{strategy_name}.at[index, '{trade_type}_signal']"
-            buy_signals.append(buy_signal)
-        conjunction = " and ".join(buy_signals)
-        
-        return conjunction
-    
-    
 
     
-
-

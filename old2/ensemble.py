@@ -80,9 +80,6 @@ for index, row in ohlcv_df.iterrows():
 
 
 
-
-
-
 final_balance, trade_results = functions.execute_trades(ohlcv_df, 0.02)
 functions.plot_trading_simulation(trade_results)
 
