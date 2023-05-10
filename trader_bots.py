@@ -33,6 +33,9 @@ class MACD_bot(Bot):
         self.fast_window = fast_window
         self.signal_window = signal_window
 
+        self.bot_type = "MACD"
+        self.params = [slow_window, fast_window, signal_window]
+
     def generate_signals(self):
         """ Computes the MACD histogram using the daily close prices. 
             Identifies the buy/sell signals (changes in histogram sign).
@@ -88,6 +91,9 @@ class bollinger_bands_bot(Bot):
         self.window = window
         self.num_standard_deviations = num_standard_deviations
 
+        self.bot_type = "Bollinger"
+        self.params = [window, num_standard_deviations]
+
     def generate_signals(self):
         """ Computes the Bollinger band values using the daily close prices.
             Identifies the buy/sell signals (price exiting the bands).
@@ -140,6 +146,10 @@ class RSI_bot(Bot):
         self.oversold_threshold = oversold_threshold
         self.window = window
 
+        self.bot_type = "RSI"
+        self.params = [overbought_threshold, oversold_threshold, window]
+
+
     def generate_signals(self):
         # Creates a copy of the DataFrame to avoid modifying the original.
         trade_signals = self.ohlcv_df.copy()
@@ -183,6 +193,9 @@ class VWAP_bot(Bot):
         # super().__init__(ohlcv_df, trade_signals, close_prices)
         super().__init__(ohlcv_df)
         self.window = window
+
+        self.bot_type = "VWAP"
+        self.params = [window]
 
     def generate_signals(self):
         # Creates a copy of the DataFrame to avoid modifying the original.
@@ -230,6 +243,9 @@ class stochastic_oscillator_bot(Bot):
         self.signal_window = signal_window
         self.overbought_threshold = overbought_threshold
         self.oversold_threshold  = oversold_threshold
+
+        self.bot_type = "Stochastic Oscillator"
+        self.params = [oscillator_window, signal_window, overbought_threshold, oversold_threshold]
 
     def generate_signals(self):
         # Creates a copy of the DataFrame to avoid modifying the original.
@@ -283,6 +299,9 @@ class SAR_bot(Bot):
         super().__init__(ohlcv_df)
         self.step = step
         self.max_step = max_step
+
+        self.bot_type = "SAR"
+        self.params = [step, max_step]
 
     def generate_signals(self):
         """ Computes the Parabolic SAR using the daily high and low prices.
@@ -338,6 +357,8 @@ class OBV_trend_following_bot(Bot):
 
     def __init__(self, ohlcv_df):
         super().__init__(ohlcv_df)
+        self.bot_type = "OVB Trend Following"
+        self.params = []
 
     def generate_signals(self):
         """ Computes the On-Balance Volume (OBV) using the daily close prices and volume.
@@ -389,6 +410,8 @@ class OBV_trend_reversal_bot(Bot):
 
     def __init__(self, ohlcv_df):
         super().__init__(ohlcv_df)
+        self.bot_type = "OVB Trend Reversal"
+        self.params = []
 
     def generate_signals(self):
         """ Computes the On-Balance Volume (OBV) using the daily close prices and volume.
@@ -442,6 +465,9 @@ class ROC_bot(Bot):
         self.window = window
         self.buy_threshold = buy_threshold
         self.sell_threshold = sell_threshold
+
+        self.bot_type = "ROC"
+        self.params = [window, buy_threshold, sell_threshold]
     
     def generate_signals(self):
         # Creates a copy of the DataFrame to avoid modifying the original.
@@ -486,6 +512,9 @@ class ensemble_bot(Bot):
         self.min_conjunctions = min_conjunctions
         self.max_conjunctions = max_conjunctions
         self.strategy_names = []
+
+        self.bot_type = "Ensemble"
+        self.params = [all_parameters, min_literals, max_literals, min_conjunctions, max_conjunctions]
     
     def initialise_bots(self):
         all_bot_signals = {}
