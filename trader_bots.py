@@ -5,6 +5,9 @@ from ta.volatility import BollingerBands
 from ta.momentum import RSIIndicator
 from ta.volume import VolumeWeightedAveragePrice
 from ta.momentum import StochasticOscillator
+from ta.trend import PSARIndicator
+from ta.volume import OnBalanceVolumeIndicator
+from ta.momentum import ROCIndicator
 import matplotlib.pyplot as plt
 import random
 
@@ -19,6 +22,7 @@ class Bot(object):
         This method generates the trading signals based on the bot's technical indicator and input data.
         """
         raise NotImplementedError("Subclass must implement generate_signals method.")
+
 
 class MACD_bot(Bot):
 
@@ -273,6 +277,205 @@ class stochastic_oscillator_bot(Bot):
         return trade_signals
     
 
+class SAR_bot(Bot):
+
+    def __init__(self, ohlcv_df, step, max_step):
+        super().__init__(ohlcv_df)
+        self.step = step
+        self.max_step = max_step
+
+    def generate_signals(self):
+        """ Computes the Parabolic SAR using the daily high and low prices.
+            Identifies the buy/sell signals (changes in SAR direction).
+            Returns a DataFrame with all the required data for executing the trades.
+        """
+        # Creates a copy of the DataFrame to avoid modifying the original.
+        trade_signals = self.ohlcv_df.copy()
+
+        # The Parabolic SAR is computed from the daily high and low prices.
+        high_prices = trade_signals["high"]
+        low_prices = trade_signals["low"]
+        close_prices = trade_signals["close"]
+
+        # Computes Parabolic SAR indicator.
+        sar_indicator = PSARIndicator(
+            high = high_prices, 
+            low = low_prices, 
+            close = close_prices,
+            step = self.step, 
+            max_step = self.max_step
+        )
+
+        # Computes indicator values.
+        trade_signals["SAR"] = sar_indicator.psar()
+
+        # Initialises output columns.
+        trade_signals["buy_signal"] = False    # Initialises output column for the buy signals.
+        trade_signals["sell_signal"] = False     # Initialises output column for the sell signals.
+
+        for index, row in trade_signals.iloc[1:].iterrows():
+            # Evaluates literals. 
+            SAR_was_below_price = trade_signals.at[index - 1, "close"] > trade_signals.at[index - 1, "SAR"] 
+            SAR_was_above_price = trade_signals.at[index - 1, "SAR"] > trade_signals.at[index - 1, "close"]
+            SAR_is_below_price = trade_signals.at[index, "close"] > trade_signals.at[index, "SAR"]
+            SAR_is_above_price = trade_signals.at[index, "SAR"] > trade_signals.at[index, "close"]
+            
+            # Evaluates buy and sell conjunctions to determine buy and sell signals. 
+            buy_signal = SAR_was_below_price and SAR_is_above_price
+            sell_signal = SAR_was_above_price and SAR_is_below_price
+
+            # Records buy and sell signals. 
+            trade_signals.at[index, "buy_signal"] = buy_signal
+            trade_signals.at[index, "sell_signal"] = sell_signal
+
+        # Drops the unwanted column from output dataframe.
+        trade_signals = trade_signals.drop(columns = ["SAR"])
+
+        return trade_signals
+
+
+class OBV_trend_following_bot(Bot):
+
+    def __init__(self, ohlcv_df):
+        super().__init__(ohlcv_df)
+
+    def generate_signals(self):
+        """ Computes the On-Balance Volume (OBV) using the daily close prices and volume.
+            Identifies the buy/sell signals (price/OBV rising or price/OBV falling).
+            Returns a DataFrame with all the required data for executing the trades.
+        """
+        # Creates a copy of the DataFrame to avoid modifying the original.
+        trade_signals = self.ohlcv_df.copy()
+
+        # The OBV is computed from the daily close prices and volume.
+        close_prices = trade_signals["close"]
+        volumes = trade_signals["volume"]
+
+        # Computes OBV indicator.
+        obv_indicator = OnBalanceVolumeIndicator(
+            close = close_prices, 
+            volume = volumes
+        )
+
+        # Computes indicator values.
+        trade_signals["OBV"] = obv_indicator.on_balance_volume()
+
+        # Initialises output columns.
+        trade_signals["buy_signal"] = False    # Initialises output column for the buy signals.
+        trade_signals["sell_signal"] = False     # Initialises output column for the sell signals.
+
+        for index, row in trade_signals.iloc[1:].iterrows():
+            # Evaluates literals. 
+            OBV_rising = trade_signals.at[index, "OBV"] > trade_signals.at[index - 1, "OBV"]
+            price_rising = trade_signals.at[index, "close"] > trade_signals.at[index - 1, "close"]
+            OBV_falling = trade_signals.at[index - 1, "OBV"] > trade_signals.at[index, "OBV"]
+            price_falling = trade_signals.at[index - 1, "close"] > trade_signals.at[index, "close"]
+            
+            # Evaluates buy and sell conjunctions to determine buy and sell signals. 
+            buy_signal = OBV_rising and price_rising
+            sell_signal = OBV_falling and price_falling
+
+            # Records buy and sell signals. 
+            trade_signals.at[index, "buy_signal"] = buy_signal
+            trade_signals.at[index, "sell_signal"] = sell_signal
+
+        # Drops the unwanted column from output dataframe.
+        trade_signals = trade_signals.drop(columns = ["OBV"])
+
+        return trade_signals
+
+
+class OBV_trend_reversal_bot(Bot):
+
+    def __init__(self, ohlcv_df):
+        super().__init__(ohlcv_df)
+
+    def generate_signals(self):
+        """ Computes the On-Balance Volume (OBV) using the daily close prices and volume.
+            Identifies the buy/sell signals (rising price and falling OBV or vice versa).
+            Returns a DataFrame with all the required data for executing the trades.
+        """
+        # Creates a copy of the DataFrame to avoid modifying the original.
+        trade_signals = self.ohlcv_df.copy()
+
+        # The OBV is computed from the daily close prices and volume.
+        close_prices = trade_signals["close"]
+        volumes = trade_signals["volume"]
+
+        # Computes OBV indicator.
+        obv_indicator = OnBalanceVolumeIndicator(
+            close = close_prices, 
+            volume = volumes
+        )
+
+        # Computes indicator values.
+        trade_signals["OBV"] = obv_indicator.on_balance_volume()
+
+        # Initialises output columns.
+        trade_signals["buy_signal"] = False    # Initialises output column for the buy signals.
+        trade_signals["sell_signal"] = False     # Initialises output column for the sell signals.
+
+        for index, row in trade_signals.iloc[1:].iterrows():
+            # Evaluates literals. 
+            OBV_rising = trade_signals.at[index, "OBV"] > trade_signals.at[index - 1, "OBV"]
+            price_rising = trade_signals.at[index, "close"] > trade_signals.at[index - 1, "close"]
+            OBV_falling = trade_signals.at[index - 1, "OBV"] > trade_signals.at[index, "OBV"]
+            price_falling = trade_signals.at[index - 1, "close"] > trade_signals.at[index, "close"]
+            
+            # Evaluates buy and sell conjunctions to determine buy and sell signals. 
+            buy_signal = price_falling and OBV_rising
+            sell_signal = price_rising and OBV_falling
+
+            # Records buy and sell signals. 
+            trade_signals.at[index, "buy_signal"] = buy_signal
+            trade_signals.at[index, "sell_signal"] = sell_signal
+
+        # Drops the unwanted column from output dataframe.
+        trade_signals = trade_signals.drop(columns = ["OBV"])
+
+        return trade_signals
+
+
+class ROC_bot(Bot):
+    def __init__(self, ohlcv_df, window, buy_threshold, sell_threshold):
+        super().__init__(ohlcv_df)
+        self.window = window
+        self.buy_threshold = buy_threshold
+        self.sell_threshold = sell_threshold
+    
+    def generate_signals(self):
+        # Creates a copy of the DataFrame to avoid modifying the original.
+        trade_signals = self.ohlcv_df.copy()
+
+        # Compute the ROC indicator.
+        roc = ROCIndicator(close=trade_signals["close"], window=self.window)
+        trade_signals["roc"] = roc.roc()
+
+        # Initialize output columns.
+        trade_signals["buy_signal"] = False    # Initialize output column for the buy signals.
+        trade_signals["sell_signal"] = False   # Initialize output column for the sell signals.
+
+        for index, row in trade_signals.iloc[self.window + 1:].iterrows():
+            # Check if the ROC indicator crossed the buy/sell threshold.
+            roc_above_buy_threshold = trade_signals.at[index, "roc"] > self.buy_threshold
+            roc_below_sell_threshold = trade_signals.at[index, "roc"] < self.sell_threshold
+
+            # Determine buy and sell signals.
+            buy_signal = roc_above_buy_threshold
+            sell_signal = roc_below_sell_threshold
+
+            # Record buy and sell signals.
+            trade_signals.at[index, "buy_signal"] = buy_signal
+            trade_signals.at[index, "sell_signal"] = sell_signal
+
+        # Drop the ROC indicator.
+        trade_signals = trade_signals.drop(columns=["roc"])
+
+        return trade_signals
+
+
+
+
 class ensemble_bot(Bot):
 
     def __init__(self, ohlcv_df, all_parameters, min_literals, max_literals, min_conjunctions, max_conjunctions):
@@ -297,6 +500,8 @@ class ensemble_bot(Bot):
             all_bot_signals[bot_name] = signals_df
 
         return all_bot_signals
+    
+
 
     def construct_conjunction(self, trade_type):
         # Chooses the strategies used in the conjunction.

@@ -97,6 +97,79 @@ def main(fee_percentage):
     # print()
     # utils.plot_trading_simulation(trade_results, "Stochastic Oscillator")
 
+    # print("SAR Trading Bot")
+    # trade_signals = trader_bots.SAR_bot(
+    #     ohlcv_df = ohlcv_df, 
+    #     step = 0.02,
+    #     max_step = 0.2
+    # ).generate_signals()
+    # print()
+    # print("SAR Trade Signals:")
+    # print(trade_signals)
+    # print()
+    # final_balance, trade_results = utils.execute_trades(trade_signals, fee_percentage)
+    # print("SAR Trade Results:")
+    # print(trade_results)
+    # print("SAR Final Balance:")
+    # print(final_balance)
+    # print()
+    # utils.plot_trading_simulation(trade_results, "SAR")
+
+    # print("OBV Trend-Following Trading Bot")
+    # trade_signals = trader_bots.OBV_trend_following_bot(
+    #     ohlcv_df = ohlcv_df 
+    # ).generate_signals()
+    # print()
+    # print("OBV Trend-Following Signals:")
+    # print(trade_signals)
+    # print()
+    # final_balance, trade_results = utils.execute_trades(trade_signals, fee_percentage)
+    # print("OBV Trend-Following Results:")
+    # print(trade_results)
+    # print("OBV Trend-Following Final Balance:")
+    # print(final_balance)
+    # print()
+    # utils.plot_trading_simulation(trade_results, "OBV Trend-Following")
+
+    # print("OBV Trend-Reversal Trading Bot")
+    # trade_signals = trader_bots.OBV_trend_reversal_bot(
+    #     ohlcv_df = ohlcv_df 
+    # ).generate_signals()
+    # print()
+    # print("OBV Trend-Reversal Signals:")
+    # print(trade_signals)
+    # print()
+    # final_balance, trade_results = utils.execute_trades(trade_signals, fee_percentage)
+    # print("OBV Trend-Reversal Results:")
+    # print(trade_results)
+    # print("OBV Trend-Reversal Final Balance:")
+    # print(final_balance)
+    # print()
+    # utils.plot_trading_simulation(trade_results, "OBV Trend-Reversal")
+
+    # print("ROC Trading Bot")
+    # trade_signals = trader_bots.ROC_bot(
+    #     ohlcv_df = ohlcv_df,
+    #     window = 12,
+    #     buy_threshold = 5,
+    #     sell_threshold = -5
+    # ).generate_signals()
+    # print()
+    # print("ROC Signals:")
+    # print(trade_signals)
+    # print()
+    # final_balance, trade_results = utils.execute_trades(trade_signals, fee_percentage)
+    # print("ROC Results:")
+    # print(trade_results)
+    # print("ROC Final Balance:")
+    # print(final_balance)
+    # print()
+    # utils.plot_trading_simulation(trade_results, "ROC")
+
+
+
+
+
     print("Ensemble Trading Bot")
     buy_dnf, sell_dnf, trade_signals = trader_bots.ensemble_bot(
         ohlcv_df = ohlcv_df,
@@ -133,7 +206,21 @@ if __name__ == "__main__":
     RSI_parameters = {'bot_name': 'RSI_bot', 'overbought_threshold': 70, 'oversold_threshold': 30, 'window': 14}
     VWAP_parameters = {'bot_name': 'VWAP_bot', 'window': 20}
     Stochastic_Oscillator_parameters = {'bot_name': 'stochastic_oscillator_bot', 'oscillator_window': 14, 'signal_window': 3, 'overbought_threshold': 80, 'oversold_threshold': 20}
+    SAR_parameters = {'bot_name': 'SAR_bot', 'step': 0.02, 'max_step': 0.2}
+    OBV_trend_following_parameters = {'bot_name': 'OBV_trend_following_bot'}
+    OBV_trend_reversal_parameters = {'bot_name': 'OBV_trend_reversal_bot'}
+    ROC_parameters = {'bot_name': 'ROC_bot', 'window': 12, 'buy_threshold': 5, 'sell_threshold': -5}
 
-    all_parameters = [MACD_parameters, Bollinger_Bands_parameters, RSI_parameters, VWAP_parameters, Stochastic_Oscillator_parameters]
+    all_parameters = [
+        MACD_parameters, 
+        Bollinger_Bands_parameters, 
+        RSI_parameters, 
+        VWAP_parameters, 
+        Stochastic_Oscillator_parameters,
+        OBV_trend_following_parameters,
+        SAR_parameters,
+        OBV_trend_reversal_parameters,
+        ROC_parameters
+        ]
 
     main(fee_percentage)
