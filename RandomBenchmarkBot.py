@@ -11,14 +11,16 @@ def main():
     
     randbench_bot = RandomBenchmarkBot()
     bitcoin_data = randbench_bot.get_data()
-    ndo, sell_signal, buy_signal = randbench_bot.execute_trades(bitcoin_data, 0.02)
-    bitcoin_data= bitcoin_data[0:719]
-    
-    buy_signal.reset_index(drop=True,inplace=True)
-    sell_signal.reset_index(drop=True,inplace=True)
-    ndo.reset_index(drop=True,inplace=True)
-    
-    bot_data = pd.concat([bitcoin_data, ndo, buy_signal, sell_signal], axis = 1)
+    for iiters in range(1000:)
+        ndo, sell_signal, buy_signal = randbench_bot.execute_trades(bitcoin_data, 0.02)
+        bitcoin_data= bitcoin_data[0:719]
+        
+        buy_signal.reset_index(drop=True,inplace=True)
+        sell_signal.reset_index(drop=True,inplace=True)
+        ndo.reset_index(drop=True,inplace=True)
+        
+        bot_data = pd.concat([bitcoin_data, ndo, buy_signal, sell_signal], axis = 1)
+        bot_data = pd.concat([bot_data], axis = 0)
     print(bot_data)
     
     return bot_data
@@ -41,7 +43,7 @@ class RandomBenchmarkBot:
         portfolio_value=[]
         sell_signal = []
         buy_signal = []
-        np.random.seed(1)
+        #np.random.seed(1)
         
         ndo = trade_signals['open'][1:720]
         FREQUENCY_OF_TRADE = 0.01
