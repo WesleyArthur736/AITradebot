@@ -513,6 +513,7 @@ class ensemble_bot(Bot):
         self.strategies_used = []
 
         self.params = [number_of_conjunctions, strategies_used]
+
     
     def initialise_bots(self):
         all_bot_signals = {}

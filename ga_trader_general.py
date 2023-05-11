@@ -14,10 +14,13 @@ from ta.volatility import BollingerBands
 import utils
 import trader_bots
 
+from sklearn.model_selection import train_test_split
+
+
 
 class GeneticAlgorithmOptimizer(object):
 
-    def __init__(self, ohlcv_df, trader_agent, trade_signals, fee_percentage, population_size, mutation_rate, num_generations):
+    def __init__(self, ohlcv_df, trader_agent, trade_signals, fee_percentage, population_size, mutation_rate, num_generations, number_of_conjunctions, strategies_used):
         self.trader_agent = trader_agent
         self.trader_agent_params = trader_agent.params
 
@@ -28,6 +31,9 @@ class GeneticAlgorithmOptimizer(object):
         self.population_size = population_size
         self.mutation_rate = mutation_rate
         self.num_generations = num_generations
+
+        self.number_of_conjunctions = number_of_conjunctions
+        self.strategies_used = strategies_used
 
         self.ohlcv_df = ohlcv_df
 
@@ -52,6 +58,31 @@ class GeneticAlgorithmOptimizer(object):
                 child_params.append(parent2.params[i])
 
         child_bot = type(parent1)(parent1.ohlcv_df, *child_params)
+
+        return child_bot
+
+    def ensemble_uniform_crossover(self, parent1, parent2):
+        """
+        Implements uniform uniform_crossover. 
+        parent1 and parent2 must be of the same type.
+        """
+
+        child_params = []
+
+        for i in range(len(parent1.params)):
+            if random.random() < 0.5:
+                child_params.append(parent1.params[i])
+            else:
+                child_params.append(parent2.params[i])
+
+        # child_bot = type(parent1)(parent1.ohlcv_df, *child_params)
+
+        child_bot = type(self.trader_agent)(
+            parent1.ohlcv_df, 
+            child_params,
+            self.number_of_conjunctions,
+            self.strategies_used
+        )
 
         return child_bot
 
@@ -189,10 +220,37 @@ class GeneticAlgorithmOptimizer(object):
         """
 
         # Generate an initial population of trader agents with random parameters
+        # OG
+        # population = [
+        #     type(self.trader_agent)(self.ohlcv_df, *self.trader_agent_params) for _ in range(self.population_size)
+        #     # TypeError: ensemble_bot.__init__() missing 1 required positional argument: 'strategies_used'
+        # ]
+
+        # population = [
+        #     type(self.trader_agent)(
+        #         self.ohlcv_df, 
+        #         *self.trader_agent_params,
+        #         self.number_of_conjunctions,
+        #         self.strategies_used
+        #     ) for _ in range(self.population_size)
+        # ]
+
         population = [
-            type(self.trader_agent)(self.ohlcv_df, *self.trader_agent_params) for _ in range(self.population_size)
-            # TypeError: ensemble_bot.__init__() missing 1 required positional argument: 'strategies_used'
+            type(self.trader_agent)(
+                self.ohlcv_df, 
+                self.trader_agent_params,
+                self.number_of_conjunctions,
+                self.strategies_used
+            ) for _ in range(self.population_size)
         ]
+
+
+        # population = [
+        #     self.trader_agent(self.ohlcv_df, *self.trader_agent_params, 
+        #     strategies_used=np.random.choice(trader_bots.STRATEGY_NAMES, 
+        #     size=random.randint(1, len(trader_bots.STRATEGY_NAMES)), replace=False)) 
+        #     for _ in range(self.population_size)
+        # ]
 
         for i in range(self.num_generations):
 
@@ -233,7 +291,7 @@ class GeneticAlgorithmOptimizer(object):
                     parent2 = parents[parent2_index]
 
                     # Perform uniform crossover to create a new child bot
-                    child_bot = self.uniform_crossover(parent1, parent2)
+                    child_bot = self.ensemble_uniform_crossover(parent1, parent2)
 
                     # Mutate the child bot with a certain probability
                     child_bot = self.ensemble_mutate(child_bot, self.mutation_rate, number_of_strats_to_mutate, max_num_conjuncts)
@@ -255,6 +313,15 @@ class GeneticAlgorithmOptimizer(object):
 if __name__ == "__main__":
 
     ohlcv_df = utils.get_daily_ohlcv_data()
+
+    X_train, X_test = train_test_split(ohlcv_df, test_size = 0.8)
+
+    # train on X_train and test on X_test
+    # X_train is 80% of the training data (not sure if it's contiguous - need to make sure it is)
+
+    print(f"X_train:\n{X_train}")
+    print(f"X_test:\n{X_test}")
+
 
     fee_percentage = 0.0
     population_size = 20
@@ -322,6 +389,8 @@ if __name__ == "__main__":
         'ROC_bot'
     ]
 
+    number_of_conjunctions = 5
+
     '''
     I don't think we want to optimize the "constituent_bot_parameters" parameter of the ensemble bot, since 
     these are just the individual bot params taken as a given.
@@ -330,47 +399,62 @@ if __name__ == "__main__":
     number_of_conjunctions and strategies_used
     '''
 
-    # instantiate a bot - in this case the stochastic oscillator
-    ensb_bot = trader_bots.ensemble_bot(
-        ohlcv_df = ohlcv_df,
-        constituent_bot_parameters = constituent_bot_parameters,
-        number_of_conjunctions = 5,
-        strategies_used = strategies_used
-    )
 
-    # generate the trading signals with the bot's technical indicator:
-    trade_signals = ensb_bot.generate_signals()
 
-    # instantiate a GeneticAlgorithmOptimizer
-    ga_optimizer = GeneticAlgorithmOptimizer(
-        ohlcv_df = ohlcv_df,
-        trader_agent = ensb_bot,
-        trade_signals = trade_signals,
-        fee_percentage = fee_percentage,
-        population_size = population_size,
-        mutation_rate = mutation_rate,
-        num_generations = num_generations
-    )
 
-    ### Run the Genetic Algorithm ###
-    best_agent = ga_optimizer.run_genetic_algorithm_ensemble(
-        n_elite = 5,
-        tournament_size = 12,
-        number_of_strats_to_mutate = 1,
-        max_num_conjuncts = 10
-    )
+    #######################################################################
 
-    # generate the trading signals with the bot's technical indicator:
-    best_trade_signals = best_agent.generate_signals()
 
-    print(f"Best agent's Trade Signals:\n{best_trade_signals}")
 
-    best_final_balance, best_trade_results = utils.execute_trades(best_trade_signals, fee_percentage)
 
-    print(f"Best agent's Trade Results:\n{best_trade_results}")
-    print(f"Best agent's Final Balance:\n{best_final_balance}")
 
-    utils.plot_trading_simulation(best_trade_results, "Best")
+
+
+
+
+    # # instantiate a bot - in this case the stochastic oscillator
+    # ensb_bot = trader_bots.ensemble_bot(
+    #     ohlcv_df = ohlcv_df,
+    #     constituent_bot_parameters = constituent_bot_parameters,
+    #     number_of_conjunctions = number_of_conjunctions,
+    #     strategies_used = strategies_used
+    # )
+
+    # # generate the trading signals with the bot's technical indicator:
+    # trade_signals = ensb_bot.generate_signals()
+
+    # # instantiate a GeneticAlgorithmOptimizer
+    # ga_optimizer = GeneticAlgorithmOptimizer(
+    #     ohlcv_df = ohlcv_df,
+    #     trader_agent = ensb_bot,
+    #     trade_signals = trade_signals,
+    #     fee_percentage = fee_percentage,
+    #     population_size = population_size,
+    #     mutation_rate = mutation_rate,
+    #     num_generations = num_generations,
+    #     number_of_conjunctions = number_of_conjunctions,
+    #     strategies_used = strategies_used
+    # )
+
+    # ### Run the Genetic Algorithm ###
+    # best_agent = ga_optimizer.run_genetic_algorithm_ensemble(
+    #     n_elite = 5,
+    #     tournament_size = 12,
+    #     number_of_strats_to_mutate = 1,
+    #     max_num_conjuncts = 10
+    # )
+
+    # # generate the trading signals with the bot's technical indicator:
+    # best_trade_signals = best_agent.generate_signals()
+
+    # print(f"Best agent's Trade Signals:\n{best_trade_signals}")
+
+    # best_final_balance, best_trade_results = utils.execute_trades(best_trade_signals, fee_percentage)
+
+    # print(f"Best agent's Trade Results:\n{best_trade_results}")
+    # print(f"Best agent's Final Balance:\n{best_final_balance}")
+
+    # utils.plot_trading_simulation(best_trade_results, "Best")
 
 
 
