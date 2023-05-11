@@ -504,26 +504,25 @@ class ROC_bot(Bot):
 
 class ensemble_bot(Bot):
 
-    def __init__(self, ohlcv_df, all_parameters, min_literals, max_literals, min_conjunctions, max_conjunctions):
+    def __init__(self, ohlcv_df, constituent_bot_parameters, number_of_conjunctions, strategies_used):
         super().__init__(ohlcv_df)
-        self.all_parameters = all_parameters
-        self.min_literals = min_literals
-        self.max_literals = max_literals
-        self.min_conjunctions = min_conjunctions
-        self.max_conjunctions = max_conjunctions
-        self.strategy_names = []
-
+        self.constituent_bot_parameters = constituent_bot_parameters
         self.bot_type = "Ensemble"
-        self.params = [all_parameters, min_literals, max_literals, min_conjunctions, max_conjunctions]
+
+        self.number_of_conjunctions = number_of_conjunctions
+        self.strategies_used = []
+
+        self.params = [number_of_conjunctions, strategies_used]
     
     def initialise_bots(self):
         all_bot_signals = {}
 
-        for parameter_list in self.all_parameters:
+        for parameter_list in self.constituent_bot_parameters:
             # Get the bot name and remove it from the dictionary.
             parameter_list_copy = dict(parameter_list)
             bot_name = parameter_list_copy.pop('bot_name')
-            self.strategy_names.append(bot_name)
+            # self.strategy_names.append(bot_name)
+            self.strategies_used.append(bot_name)
             # Initialize the bot with its specified parameters and save output signals dataframe.
             signals_df = globals()[bot_name](self.ohlcv_df, **parameter_list_copy).generate_signals()
             all_bot_signals[bot_name] = signals_df
@@ -531,15 +530,14 @@ class ensemble_bot(Bot):
         return all_bot_signals
     
 
-
     def construct_conjunction(self, trade_type):
-        # Chooses the strategies used in the conjunction.
-        number_of_strategies_included = random.randint(self.min_literals, self.max_literals)
-        strategies_used = random.sample(self.strategy_names, number_of_strategies_included)
+        # # Chooses the strategies used in the conjunction.
+        # number_of_strategies_included = random.randint(self.min_literals, self.max_literals)
+        # strategies_used = random.sample(self.strategy_names, number_of_strategies_included)
 
         # Constructs the conjunction by ANDing the signals from the selected strategies.
         buy_signals = []
-        for strategy_name in strategies_used:
+        for strategy_name in self.strategies_used:
             bot_signals = f"all_bot_signals['{strategy_name}']"
             buy_signal = f"{bot_signals}.at[index, '{trade_type}_signal']"
             buy_signals.append(buy_signal)
@@ -548,12 +546,12 @@ class ensemble_bot(Bot):
         return conjunction
 
     def construct_dnf(self, trade_type):
-        # Chooses how many conjunctions are used in the DNF.
-        number_of_conjunctions = random.randint(1, 4)
+        # # Chooses how many conjunctions are used in the DNF.
+        # number_of_conjunctions = random.randint(1, 4)
 
         # Constructs the DNF by generating conjunctions and ORing them together.
         conjunctions = []
-        for i in range(number_of_conjunctions):
+        for i in range(self.number_of_conjunctions):
                 conjunction = self.construct_conjunction(trade_type)
                 conjunctions.append(conjunction)
         dnf = " or ".join(conjunctions)
@@ -584,7 +582,65 @@ class ensemble_bot(Bot):
             sell_signal = eval(sell_dnf_with_index)
             trade_signals.at[index, "sell_signal"] = sell_signal 
 
-        return buy_dnf, sell_dnf, trade_signals
+        # return buy_dnf, sell_dnf, trade_signals
+        return trade_signals
+
+
+
+    # def construct_conjunction(self, trade_type):
+    #     # Chooses the strategies used in the conjunction.
+    #     number_of_strategies_included = random.randint(self.min_literals, self.max_literals)
+    #     strategies_used = random.sample(self.strategy_names, number_of_strategies_included)
+
+    #     # Constructs the conjunction by ANDing the signals from the selected strategies.
+    #     buy_signals = []
+    #     for strategy_name in strategies_used:
+    #         bot_signals = f"all_bot_signals['{strategy_name}']"
+    #         buy_signal = f"{bot_signals}.at[index, '{trade_type}_signal']"
+    #         buy_signals.append(buy_signal)
+    #     conjunction = " and ".join(buy_signals)
+        
+    #     return conjunction
+
+    # def construct_dnf(self, trade_type):
+    #     # Chooses how many conjunctions are used in the DNF.
+    #     number_of_conjunctions = random.randint(1, 4)
+
+    #     # Constructs the DNF by generating conjunctions and ORing them together.
+    #     conjunctions = []
+    #     for i in range(number_of_conjunctions):
+    #             conjunction = self.construct_conjunction(trade_type)
+    #             conjunctions.append(conjunction)
+    #     dnf = " or ".join(conjunctions)
+        
+    #     return dnf
+
+    # def generate_signals(self):
+    #     # Creates a copy of the DataFrame to avoid modifying the original.
+    #     trade_signals = self.ohlcv_df.copy()
+
+    #     all_bot_signals = self.initialise_bots()
+
+    #     # Create random DNF expression for buy signal.
+    #     buy_dnf = self.construct_dnf(trade_type = "buy")
+
+    #     # Evaluate DNF expression for each day of data and save to dataframe.
+    #     for index, row in trade_signals.iterrows():
+    #         buy_dnf_with_index = buy_dnf.replace("index", str(index))
+    #         buy_signal = eval(buy_dnf_with_index)
+    #         trade_signals.at[index, "buy_signal"] = buy_signal 
+
+    #     # Create random DNF expression for sell signal.
+    #     sell_dnf = self.construct_dnf(trade_type = "sell")
+
+    #     # Evaluate DNF expression for each day of data and save to dataframe.
+    #     for index, row in trade_signals.iterrows(): 
+    #         sell_dnf_with_index = sell_dnf.replace("index", str(index))
+    #         sell_signal = eval(sell_dnf_with_index)
+    #         trade_signals.at[index, "sell_signal"] = sell_signal 
+
+    #     # return buy_dnf, sell_dnf, trade_signals
+    #     return trade_signals
 
 
 

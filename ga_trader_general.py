@@ -37,33 +37,6 @@ class GeneticAlgorithmOptimizer(object):
         aud_balance, _ = utils.execute_trades(trade_signals, fee_percentage)
         return aud_balance
 
-    # def uniform_crossover(self, parent1, parent2):
-    #     # weight the uniform_crossover for each param value
-    #     # Implement uniform_crossover operation that creates a new child by combining the genes of the two parents
-    #     child = MACD_Trading_Bot(parent1.SLOW_WINDOW, parent2.FAST_WINDOW, (parent1.SIGNAL_WINDOW + parent1.SIGNAL_WINDOW)/2)
-
-    #     return child
-
-    # def uniform_crossover(self, parent1, parent2):
-    #     bot_type = parent1.bot_type
-    #     for parent_1_param in parent1.params:
-    #         for parent_2_param in parent2.params:
-    #             child_params =
-
-    #     return child
-
-    # def uniform_crossover(self, parent1, parent2):
-    #     # Create a new child bot with the same parameters as the parents
-    #     child_params = [None] * len(parent1.params)
-    #     for i in range(len(parent1.params)):
-    #         if random.random() < 0.5:
-    #             child_params[i] = parent1.params[i]
-    #         else:
-    #             child_params[i] = parent2.params[i]
-    #     child_bot = Bot(child_params)
-    #     # Other bot uniform_crossover code here
-    #     return child_bot
-
     def uniform_crossover(self, parent1, parent2):
         """
         Implements uniform uniform_crossover. 
@@ -105,41 +78,176 @@ class GeneticAlgorithmOptimizer(object):
 
         return trader_agent
 
-    def run_genetic_algorithm(self):
+    def ensemble_mutate(self, trader_agent, mutation_rate, number_of_strats_to_mutate, max_num_conjuncts):
+        """
+        Randomly modifies the genes of the trader agent with a certain probability.
+        This is achieved by simply adding Gaussian white noise to the float parameters of 
+        the bot. The float noise has a mean of 0 and a standard deviation of 0.1.
+        In the case of integer parameters, a random nunber in the range -max_num_conjuncts to max_num_conjuncts is 
+        added to the parameter.
 
-        # need to pass the parameter values to optimise and then a list of acceptable bounds on these params
+        It looks like the GA should optimize the following parameters of the ensemble bot:
+        number_of_conjunctions and strategies_used. An int and a string, respectfully.
+
+        We only have 9 strategies at present so the max value that 'number_of_strats_to_mutate' can take is 9.
+        """
+
+        # Add some Gaussian noise to the parameters, with a variance determined my "param_variance"
+        for bot_param in trader_agent.params:
+            if random.random() < mutation_rate:
+
+                # for 'number_of_conjunctions':
+                if isinstance(bot_param, int):
+                    bot_param += np.random.randint(2, max_num_conjuncts) # always use at least 2 conjuncts
+
+                # for 'strategies_used':
+                elif isinstance(bot_param, str):
+                    strats_to_remove = np.random.sample(range(len(bot_param)), number_of_strats_to_mutate)
+                    for index in sorted(indices_to_remove, reverse = True): # loop through the indices in reverse order and remove the randomly selected elements
+                        del bot_param[index]
+
+                    randomly_selected_strats_to_use = list(np.random.choice(trader_agent.strategies_used, size = number_of_strats_to_mutate, replace = False))
+
+                    bot_param.extend(randomly_selected_strats_to_use)
+
+                else:
+                    print(f"\n\nOH DEAR!!!!\n\n")
+
+
+        return trader_agent
+
+    def run_genetic_algorithm(self, n_elite, tournament_size):
+        """
+        Implements 'Elitism' and uses tournament selection for the parents
+        """
 
         # Generate an initial population of trader agents with random parameters
-
-        # this unpacks a generic list of parameter values into the right bot constructor:
         population = [
-            type(self.trader_agent)(
-                self.ohlcv_df, *self.trader_agent_params
-            ) for _ in range(population_size)
+            type(self.trader_agent)(self.ohlcv_df, *self.trader_agent_params) for _ in range(self.population_size)
         ]
-        
-        for i in range(num_generations):
+
+        for i in range(self.num_generations):
 
             print(f"\ngeneration: {i}")
 
             # Evaluate the fitness of each trader agent
-            fitness_scores = [self.fitness(trader_agent, trade_signals, fee_percentage) for trader_agent in population]
-            
-            # Select the top-performing trader agents to be parents of the next generation
-            parents = [population[index] for index in sorted(range(len(fitness_scores)), key = lambda i: fitness_scores[i])[-2:]]
-            
-            # Create a new population by crossing over and mutating the parents
-            new_population = [self.uniform_crossover(parents[0], parents[1]) for _ in range(population_size)]
+            fitness_scores = [self.fitness(trader_agent, self.trade_signals, self.fee_percentage) for trader_agent in population]
 
-            new_population = [self.mutate(trader_agent, mutation_rate) for trader_agent in new_population]
-            
+            # Select the top-performing trader agents to be the elite members of the next generation
+            elite_indices = sorted(range(len(fitness_scores)), key=lambda i: fitness_scores[i], reverse=True)[:n_elite]
+            elite_population = [population[i] for i in elite_indices]
+
+            # Randomly select the rest of the parents for the next generation using tournament selection
+            num_parents = self.population_size - n_elite
+            parents = []
+            for j in range(num_parents):
+                # Select a random subset of the population to compete in the tournament
+                tournament_indices = random.sample(range(len(population)), tournament_size)
+                tournament = [population[i] for i in tournament_indices]
+
+                # Choose the best individual from the tournament as a parent
+                tournament_fitness = [fitness_scores[i] for i in tournament_indices]
+                best_index = max(range(len(tournament_fitness)), key=lambda i: tournament_fitness[i])
+                best_parent = tournament[best_index]
+
+                parents.append(best_parent)
+
+            # Create a new population by crossing over and mutating the parents
+            new_population = []
+            for i in range(self.population_size):
+                if i < n_elite:
+                    # Preserve elite members for the next generation
+                    new_population.append(elite_population[i])
+                else:
+                    # Select two random parents for uniform crossover
+                    parent1_index, parent2_index = random.sample(range(len(parents)), 2)
+                    parent1 = parents[parent1_index]
+                    parent2 = parents[parent2_index]
+
+                    # Perform uniform crossover to create a new child bot
+                    child_bot = self.uniform_crossover(parent1, parent2)
+
+                    # Mutate the child bot with a certain probability
+                    child_bot = self.mutate(child_bot, self.mutation_rate)
+
+                    # Add the child bot to the new population
+                    new_population.append(child_bot)
+
             # Replace the old population with the new one
             population = new_population
-        
-        # Return the best-performing trader agent
-        fitness_scores = [self.fitness(trader_agent, trade_signals, fee_percentage) for trader_agent in population]
 
-        best_index = max(range(len(fitness_scores)), key = lambda i: fitness_scores[i])
+        # Return the best-performing trader agent
+        fitness_scores = [self.fitness(trader_agent, self.trade_signals, self.fee_percentage) for trader_agent in population]
+
+        best_index = max(range(len(fitness_scores)), key=lambda i: fitness_scores[i])
+
+        return population[best_index]
+
+    def run_genetic_algorithm_ensemble(self, n_elite, tournament_size, number_of_strats_to_mutate, max_num_conjuncts):
+        """
+        Implements 'Elitism' and uses tournament selection for the parents
+        """
+
+        # Generate an initial population of trader agents with random parameters
+        population = [
+            type(self.trader_agent)(self.ohlcv_df, *self.trader_agent_params) for _ in range(self.population_size)
+            # TypeError: ensemble_bot.__init__() missing 1 required positional argument: 'strategies_used'
+        ]
+
+        for i in range(self.num_generations):
+
+            print(f"\ngeneration: {i}")
+
+            # Evaluate the fitness of each trader agent
+            fitness_scores = [self.fitness(trader_agent, self.trade_signals, self.fee_percentage) for trader_agent in population]
+
+            # Select the top-performing trader agents to be the elite members of the next generation
+            elite_indices = sorted(range(len(fitness_scores)), key=lambda i: fitness_scores[i], reverse=True)[:n_elite]
+            elite_population = [population[i] for i in elite_indices]
+
+            # Randomly select the rest of the parents for the next generation using tournament selection
+            num_parents = self.population_size - n_elite
+            parents = []
+            for j in range(num_parents):
+                # Select a random subset of the population to compete in the tournament
+                tournament_indices = random.sample(range(len(population)), tournament_size)
+                tournament = [population[i] for i in tournament_indices]
+
+                # Choose the best individual from the tournament as a parent
+                tournament_fitness = [fitness_scores[i] for i in tournament_indices]
+                best_index = max(range(len(tournament_fitness)), key=lambda i: tournament_fitness[i])
+                best_parent = tournament[best_index]
+
+                parents.append(best_parent)
+
+            # Create a new population by crossing over and mutating the parents
+            new_population = []
+            for i in range(self.population_size):
+                if i < n_elite:
+                    # Preserve elite members for the next generation
+                    new_population.append(elite_population[i])
+                else:
+                    # Select two random parents for uniform crossover
+                    parent1_index, parent2_index = random.sample(range(len(parents)), 2)
+                    parent1 = parents[parent1_index]
+                    parent2 = parents[parent2_index]
+
+                    # Perform uniform crossover to create a new child bot
+                    child_bot = self.uniform_crossover(parent1, parent2)
+
+                    # Mutate the child bot with a certain probability
+                    child_bot = self.ensemble_mutate(child_bot, self.mutation_rate, number_of_strats_to_mutate, max_num_conjuncts)
+
+                    # Add the child bot to the new population
+                    new_population.append(child_bot)
+
+            # Replace the old population with the new one
+            population = new_population
+
+        # Return the best-performing trader agent
+        fitness_scores = [self.fitness(trader_agent, self.trade_signals, self.fee_percentage) for trader_agent in population]
+
+        best_index = max(range(len(fitness_scores)), key=lambda i: fitness_scores[i])
 
         return population[best_index]
 
@@ -149,7 +257,7 @@ if __name__ == "__main__":
     ohlcv_df = utils.get_daily_ohlcv_data()
 
     fee_percentage = 0.0
-    population_size = 100
+    population_size = 20
     mutation_rate = 0.05
     num_generations = 10
 
@@ -173,22 +281,70 @@ if __name__ == "__main__":
     min_conjunctions = 2
     max_conjunctions = 10
 
+    n_elite = 10
+
+    slow_window = 26
+    fast_window = 12
+    signal_window = 9
+
+    number_of_strats_to_mutate = 1
+    max_num_conjuncts = 10
+
+    MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': 26, 'fast_window': 12, 'signal_window': 9}
+    Bollinger_Bands_parameters = {'bot_name': 'bollinger_bands_bot', 'window': 20, 'num_standard_deviations': 2.5}
+    RSI_parameters = {'bot_name': 'RSI_bot', 'overbought_threshold': 70, 'oversold_threshold': 30, 'window': 14}
+    VWAP_parameters = {'bot_name': 'VWAP_bot', 'window': 20}
+    Stochastic_Oscillator_parameters = {'bot_name': 'stochastic_oscillator_bot', 'oscillator_window': 14, 'signal_window': 3, 'overbought_threshold': 80, 'oversold_threshold': 20}
+    SAR_parameters = {'bot_name': 'SAR_bot', 'step': 0.02, 'max_step': 0.2}
+    OBV_trend_following_parameters = {'bot_name': 'OBV_trend_following_bot'}
+    OBV_trend_reversal_parameters = {'bot_name': 'OBV_trend_reversal_bot'}
+    ROC_parameters = {'bot_name': 'ROC_bot', 'window': 12, 'buy_threshold': 5, 'sell_threshold': -5}
+
+    constituent_bot_parameters = [
+        MACD_parameters, 
+        Bollinger_Bands_parameters, 
+        RSI_parameters, 
+        VWAP_parameters, 
+        Stochastic_Oscillator_parameters,
+        OBV_trend_following_parameters,
+        SAR_parameters,
+        OBV_trend_reversal_parameters,
+        ROC_parameters
+    ]
+
+    strategies_used = [
+        'MACD_bot', 'bollinger_bands_bot', 
+        'overbought_threshold', 'VWAP_bot', 
+        'stochastic_oscillator_bot', 
+        'SAR_bot',
+        'OBV_trend_following_bot',
+        'OBV_trend_reversal_bot',
+        'ROC_bot'
+    ]
+
+    '''
+    I don't think we want to optimize the "constituent_bot_parameters" parameter of the ensemble bot, since 
+    these are just the individual bot params taken as a given.
+
+    It looks like the GA should optimize the following parameters of the ensemble bot:
+    number_of_conjunctions and strategies_used
+    '''
+
     # instantiate a bot - in this case the stochastic oscillator
-    stoch_osc_bot = trader_bots.stochastic_oscillator_bot(
+    ensb_bot = trader_bots.ensemble_bot(
         ohlcv_df = ohlcv_df,
-        oscillator_window = oscillator_window,
-        signal_window = signal_window,
-        overbought_threshold = overbought_threshold,
-        oversold_threshold = oversold_threshold
+        constituent_bot_parameters = constituent_bot_parameters,
+        number_of_conjunctions = 5,
+        strategies_used = strategies_used
     )
 
     # generate the trading signals with the bot's technical indicator:
-    trade_signals = stoch_osc_bot.generate_signals()
+    trade_signals = ensb_bot.generate_signals()
 
     # instantiate a GeneticAlgorithmOptimizer
     ga_optimizer = GeneticAlgorithmOptimizer(
         ohlcv_df = ohlcv_df,
-        trader_agent = stoch_osc_bot,
+        trader_agent = ensb_bot,
         trade_signals = trade_signals,
         fee_percentage = fee_percentage,
         population_size = population_size,
@@ -197,7 +353,12 @@ if __name__ == "__main__":
     )
 
     ### Run the Genetic Algorithm ###
-    best_agent = ga_optimizer.run_genetic_algorithm()
+    best_agent = ga_optimizer.run_genetic_algorithm_ensemble(
+        n_elite = 5,
+        tournament_size = 12,
+        number_of_strats_to_mutate = 1,
+        max_num_conjuncts = 10
+    )
 
     # generate the trading signals with the bot's technical indicator:
     best_trade_signals = best_agent.generate_signals()
@@ -210,6 +371,298 @@ if __name__ == "__main__":
     print(f"Best agent's Final Balance:\n{best_final_balance}")
 
     utils.plot_trading_simulation(best_trade_results, "Best")
+
+
+
+
+
+
+
+
+
+
+
+    # # instantiate a bot - in this case the stochastic oscillator
+    # macd_bot = trader_bots.MACD_bot(
+    #     ohlcv_df = ohlcv_df,
+    #     slow_window = slow_window,
+    #     fast_window = fast_window,
+    #     signal_window = signal_window
+    # )
+
+    # # generate the trading signals with the bot's technical indicator:
+    # trade_signals = macd_bot.generate_signals()
+
+    # # instantiate a GeneticAlgorithmOptimizer
+    # ga_optimizer = GeneticAlgorithmOptimizer(
+    #     ohlcv_df = ohlcv_df,
+    #     trader_agent = macd_bot,
+    #     trade_signals = trade_signals,
+    #     fee_percentage = fee_percentage,
+    #     population_size = population_size,
+    #     mutation_rate = mutation_rate,
+    #     num_generations = num_generations
+    # )
+
+    # ### Run the Genetic Algorithm ###
+    # best_agent = ga_optimizer.run_genetic_algorithm(
+    #     n_elite = 5,
+    #     tournament_size = 12
+    # )
+
+    # # generate the trading signals with the bot's technical indicator:
+    # best_trade_signals = best_agent.generate_signals()
+
+    # print(f"Best agent's Trade Signals:\n{best_trade_signals}")
+
+    # best_final_balance, best_trade_results = utils.execute_trades(best_trade_signals, fee_percentage)
+
+    # print(f"Best agent's Trade Results:\n{best_trade_results}")
+    # print(f"Best agent's Final Balance:\n{best_final_balance}")
+
+    # utils.plot_trading_simulation(best_trade_results, "Best")
+
+
+
+
+
+
+
+
+
+
+
+
+    # # instantiate a bot - in this case the stochastic oscillator
+    # sar_bot = trader_bots.SAR_bot(
+    #     ohlcv_df = ohlcv_df,
+    #     step = step,
+    #     max_step = max_step
+    # )
+
+    # # generate the trading signals with the bot's technical indicator:
+    # trade_signals = sar_bot.generate_signals()
+
+    # # instantiate a GeneticAlgorithmOptimizer
+    # ga_optimizer = GeneticAlgorithmOptimizer(
+    #     ohlcv_df = ohlcv_df,
+    #     trader_agent = sar_bot,
+    #     trade_signals = trade_signals,
+    #     fee_percentage = fee_percentage,
+    #     population_size = population_size,
+    #     mutation_rate = mutation_rate,
+    #     num_generations = num_generations
+    # )
+
+    # ### Run the Genetic Algorithm ###
+    # best_agent = ga_optimizer.run_genetic_algorithm(
+    #     n_elite = 5,
+    #     tournament_size = 12
+    # )
+
+    # # generate the trading signals with the bot's technical indicator:
+    # best_trade_signals = best_agent.generate_signals()
+
+    # print(f"Best agent's Trade Signals:\n{best_trade_signals}")
+
+    # best_final_balance, best_trade_results = utils.execute_trades(best_trade_signals, fee_percentage)
+
+    # print(f"Best agent's Trade Results:\n{best_trade_results}")
+    # print(f"Best agent's Final Balance:\n{best_final_balance}")
+
+    # utils.plot_trading_simulation(best_trade_results, "Best")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ # def run_genetic_algorithm(self, n_elite):
+    #     # Generate an initial population of trader agents with random parameters
+    #     population = [
+    #         type(self.trader_agent)(self.ohlcv_df, *self.trader_agent_params) for _ in range(self.population_size)
+    #     ]
+
+    #     for i in range(self.num_generations):
+
+    #         print(f"\ngeneration: {i}")
+
+    #         # Evaluate the fitness of each trader agent
+    #         fitness_scores = [self.fitness(trader_agent, self.trade_signals, self.fee_percentage) for trader_agent in population]
+
+    #         # Select the top-performing trader agents to be the elite members of the next generation
+    #         elite_indices = sorted(range(len(fitness_scores)), key=lambda i: fitness_scores[i], reverse=True)[:n_elite]
+    #         elite_population = [population[i] for i in elite_indices]
+
+    #         # Randomly select the rest of the parents for the next generation
+    #         num_parents = self.population_size - n_elite
+    #         non_elite_indices = [i for i in range(len(population)) if i not in elite_indices]
+    #         parents = random.sample(non_elite_indices, num_parents)
+
+    #         # Create a new population by crossing over and mutating the parents
+    #         new_population = []
+    #         for i in range(self.population_size):
+    #             if i < n_elite:
+    #                 # Preserve elite members for the next generation
+    #                 new_population.append(elite_population[i])
+    #             else:
+    #                 # Select two random parents for uniform crossover
+    #                 parent1_index, parent2_index = random.sample(parents, 2)
+    #                 parent1 = population[parent1_index]
+    #                 parent2 = population[parent2_index]
+
+    #                 # Perform uniform crossover to create a new child bot
+    #                 child_bot = self.uniform_crossover(parent1, parent2)
+
+    #                 # Mutate the child bot with a certain probability
+    #                 child_bot = self.mutate(child_bot, self.mutation_rate)
+
+    #                 # Add the child bot to the new population
+    #                 new_population.append(child_bot)
+
+    #         # Replace the old population with the new one
+    #         population = new_population
+
+    #     # Return the best-performing trader agent
+    #     fitness_scores = [self.fitness(trader_agent, self.trade_signals, self.fee_percentage) for trader_agent in population]
+
+    #     best_index = max(range(len(fitness_scores)), key=lambda i: fitness_scores[i])
+
+    #     return population[best_index]
+
+    # def uniform_crossover(self, parent1, parent2):
+    #     # weight the uniform_crossover for each param value
+    #     # Implement uniform_crossover operation that creates a new child by combining the genes of the two parents
+    #     child = MACD_Trading_Bot(parent1.SLOW_WINDOW, parent2.FAST_WINDOW, (parent1.SIGNAL_WINDOW + parent1.SIGNAL_WINDOW)/2)
+
+    #     return child
+
+    # def uniform_crossover(self, parent1, parent2):
+    #     bot_type = parent1.bot_type
+    #     for parent_1_param in parent1.params:
+    #         for parent_2_param in parent2.params:
+    #             child_params =
+
+    #     return child
+
+    # def uniform_crossover(self, parent1, parent2):
+    #     # Create a new child bot with the same parameters as the parents
+    #     child_params = [None] * len(parent1.params)
+    #     for i in range(len(parent1.params)):
+    #         if random.random() < 0.5:
+    #             child_params[i] = parent1.params[i]
+    #         else:
+    #             child_params[i] = parent2.params[i]
+    #     child_bot = Bot(child_params)
+    #     # Other bot uniform_crossover code here
+    #     return child_bot
+
+    # def run_genetic_algorithm(self, n_elite):
+    #     # Generate an initial population of trader agents with random parameters
+    #     population = [
+    #         type(self.trader_agent)(self.ohlcv_df, *self.trader_agent_params) for _ in range(self.population_size)
+    #     ]
+
+    #     for i in range(self.num_generations):
+
+    #         print(f"\ngeneration: {i}")
+
+    #         # Evaluate the fitness of each trader agent
+    #         fitness_scores = [self.fitness(trader_agent, self.trade_signals, self.fee_percentage) for trader_agent in population]
+
+    #         # Select the top-performing trader agents to be the elite members of the next generation
+    #         elite_indices = sorted(range(len(fitness_scores)), key=lambda i: fitness_scores[i], reverse=True)[:n_elite]
+    #         elite_population = [population[i] for i in elite_indices]
+
+    #         # Randomly select the rest of the parents for the next generation
+    #         num_parents = self.population_size - n_elite
+    #         non_elite_indices = [i for i in range(len(population)) if i not in elite_indices]
+    #         non_elite_population = random.sample(non_elite_indices, num_parents)
+
+    #         # Create a new population by crossing over and mutating the parents
+    #         new_population = []
+    #         for i in range(self.population_size):
+    #             if i < n_elite:
+    #                 # Preserve elite members for the next generation
+    #                 new_population.append(elite_population[i])
+    #             else:
+    #                 new_population.append(non_elite_population[i])
+
+    #         for i in range(self.population_size):
+    #             # Select two random parents for uniform crossover
+    #             parent1_index, parent2_index = random.sample(new_population, 2)
+    #             parent1 = population[parent1_index]
+    #             parent2 = population[parent2_index]
+
+    #             # Perform uniform crossover to create a new child bot
+    #             child_bot = self.uniform_crossover(parent1, parent2)
+
+    #             # Mutate the child bot with a certain probability
+    #             child_bot = self.mutate(child_bot, self.mutation_rate)
+
+    #             # Add the child bot to the new population
+    #             new_population.append(child_bot)
+
+    #         # Replace the old population with the new one
+    #         population = new_population
+
+    #     # Return the best-performing trader agent
+    #     fitness_scores = [self.fitness(trader_agent, self.trade_signals, self.fee_percentage) for trader_agent in population]
+
+    #     best_index = max(range(len(fitness_scores)), key=lambda i: fitness_scores[i])
+
+    #     return population[best_index]
+
+    ############################################################################################
+    # OG Version
+    # def run_genetic_algorithm(self):
+
+    #     # need to pass the parameter values to optimise and then a list of acceptable bounds on these params
+
+    #     # Generate an initial population of trader agents with random parameters
+
+    #     # this unpacks a generic list of parameter values into the right bot constructor:
+    #     population = [
+    #         type(self.trader_agent)(
+    #             self.ohlcv_df, *self.trader_agent_params
+    #         ) for _ in range(population_size)
+    #     ]
+        
+    #     for i in range(num_generations):
+
+    #         print(f"\ngeneration: {i}")
+
+    #         # Evaluate the fitness of each trader agent
+    #         fitness_scores = [self.fitness(trader_agent, trade_signals, fee_percentage) for trader_agent in population]
+            
+    #         # Select the top-performing trader agents to be parents of the next generation
+    #         parents = [population[index] for index in sorted(range(len(fitness_scores)), key = lambda i: fitness_scores[i])[-2:]]
+            
+    #         # Create a new population by crossing over and mutating the parents
+    #         new_population = [self.uniform_crossover(parents[0], parents[1]) for _ in range(population_size)]
+
+    #         new_population = [self.mutate(trader_agent, mutation_rate) for trader_agent in new_population]
+            
+    #         # Replace the old population with the new one
+    #         population = new_population
+        
+    #     # Return the best-performing trader agent
+    #     fitness_scores = [self.fitness(trader_agent, trade_signals, fee_percentage) for trader_agent in population]
+
+    #     best_index = max(range(len(fitness_scores)), key = lambda i: fitness_scores[i])
+
+    #     return population[best_index]
+
+    #############################################################################################
 
 
 # def run_macd_trader():
