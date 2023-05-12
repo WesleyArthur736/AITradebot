@@ -23,6 +23,7 @@ def execute_trades(trade_signals, fee_percentage):
         Returns the trading account's final balance in AUD.
     """
     trade_results = trade_signals.copy()
+    # trade_results = trade_signals
     trade_results["portfolio_value"] = 0
 
     aud_balance = 100.00
