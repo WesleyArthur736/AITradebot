@@ -515,13 +515,19 @@ class ensemble_bot(Bot):
 
         self.number_of_disjuncts = number_of_disjuncts
         self.number_of_conjuncts = number_of_conjuncts
+
         self.all_strategies = all_strategies
         # self.all_strategies = self.get_all_strategies()
 
-        self.strategies_to_use = self.select_strats() # a subset of "self.all_strategies", use in constructing each conjunction
+        self.strategies_to_use = self.select_strats() # a subset of "self.all_strategies", used in constructing each conjunction
 
-        self.params = [self.number_of_disjuncts, self.strategies_to_use]
+        # self.params = [self.number_of_disjuncts, self.strategies_to_use]
         self.bot_type = "Ensemble"
+
+        self.buy_dnf = ""
+        self.sell_dnf = ""
+
+        self.params = [self.number_of_disjuncts, self.strategies_to_use, self.buy_dnf, self.sell_dnf]
 
     def select_strats(self):
         """
@@ -570,7 +576,8 @@ class ensemble_bot(Bot):
 
         # Constructs the conjunction by ANDing the signals from the selected strategies.
         buy_signals = []
-        for strategy_name in self.all_strategies: # basically self.all_strategies is "number_of_conjuncts"
+        # for strategy_name in self.all_strategies: # basically self.all_strategies is "number_of_conjuncts"
+        for strategy_name in self.strategies_to_use: # basically self.all_strategies is "number_of_conjuncts"
             bot_signals = f"all_bot_signals['{strategy_name}']"
             buy_signal = f"{bot_signals}.at[index, '{trade_type}_signal']"
             buy_signals.append(buy_signal)
@@ -586,8 +593,8 @@ class ensemble_bot(Bot):
         # them together to make a disjunction of conjunctions.
         conjunctions = []
         for i in range(self.number_of_disjuncts):
-                conjunction = self.construct_cnf(trade_type)
-                conjunctions.append(conjunction)
+            conjunction = self.construct_cnf(trade_type)
+            conjunctions.append(conjunction)
         dnf = " or ".join(conjunctions)
         
         return dnf
@@ -604,6 +611,7 @@ class ensemble_bot(Bot):
         # Evaluate DNF expression for each day of data and save to dataframe.
         for index, row in trade_signals.iterrows():
             buy_dnf_with_index = buy_dnf.replace("index", str(index)) # the actual DNF expression 
+            # print(f"\nbuy_dnf_with_index:\n{buy_dnf_with_index}\n")
             buy_signal = eval(buy_dnf_with_index) # True or False
             trade_signals.at[index, "buy_signal"] = buy_signal # The signal to buy (True or False) at the current row in the data
 
@@ -661,7 +669,7 @@ def enumerate_dnfs(ensemble_bot, trade_type):
     for idx, dnf in enumerate(dnf_with_index_list):
         print(f"\n{trade_type} dnf for index: {idx} of trade_signals:\n{dnf}\n")
 
-
+# buy_dnf_with_index
 
 
 # all_bots = [

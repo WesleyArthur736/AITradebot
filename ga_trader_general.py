@@ -475,7 +475,6 @@ class EnsembleGeneticAlgorithmOptimizer(object):
             self.all_strategies
         )
 
-
         return child_bot
 
     # def ensemble_mutate(self, trader_agent, mutation_rate, number_of_strats_to_mutate, max_num_conjuncts, max_num_disjuncts):
@@ -498,14 +497,15 @@ class EnsembleGeneticAlgorithmOptimizer(object):
                 # for 'number_of_disjuncts':
                 if isinstance(bot_param, int):
                     # bot_param += np.random.randint(2, max_num_conjuncts) # always use at least 2 conjuncts
-                    new_num_disjuncts = trader_agent.number_of_disjuncts + np.random.randint(2, len(trader_agent.all_strategies)) # always use at least 2 conjuncts
-                    trader_agent.number_of_disjuncts = new_num_disjuncts
+                    # new_num_disjuncts = trader_agent.number_of_disjuncts + np.random.randint(-len(trader_agent.all_strategies) + 1, len(trader_agent.all_strategies)) # always use at least 2 conjuncts
+                    new_num_disjuncts = trader_agent.params[0] + np.random.randint(-len(trader_agent.all_strategies) + 1, len(trader_agent.all_strategies)) # always use at least 2 conjuncts
+                    # trader_agent.number_of_disjuncts = new_num_disjuncts
                     trader_agent.params[0] = new_num_disjuncts
 
                     # print(f"\nnumber_of_disjuncts: {bot_param}")
                     # print(f"bot_param: {bot_param}")
-                    print(f"\ntrader_agent.number_of_disjuncts: {trader_agent.number_of_disjuncts}")
-                    print(f"trader_agent.params[0]: {trader_agent.params[0]}\n") # explicitely set this too
+                    # print(f"\ntrader_agent.number_of_disjuncts: {trader_agent.number_of_disjuncts}")
+                    # print(f"trader_agent.params[0]: {trader_agent.params[0]}\n") # explicitely set this too
 
                 # for 'strategies_to_use':
                 elif isinstance(bot_param, list):
@@ -513,24 +513,29 @@ class EnsembleGeneticAlgorithmOptimizer(object):
                     # remove 'number_of_strats_to_mutate' number of strats from 'strategies_to_use'
                     # strats_to_remove = np.random.sample(range(len(bot_param)), number_of_strats_to_mutate)
 
-                    strats_to_remove = random.sample(trader_agent.strategies_to_use, number_of_strats_to_mutate)
+                    # strats_to_remove = random.sample(trader_agent.strategies_to_use, number_of_strats_to_mutate)
+                    strats_to_remove = random.sample(trader_agent.params[1], number_of_strats_to_mutate)
+
 
                     # for index in sorted(strats_to_remove, reverse = True): # loop through the indices in reverse order and remove the randomly selected elements
                     #     del trader_agent.strategies_to_use[index]
                     for index, _ in enumerate(sorted(strats_to_remove, reverse = True)): # loop through the indices in reverse order and remove the randomly selected elements
-                        del trader_agent.strategies_to_use[index]
+                        # del trader_agent.strategies_to_use[index]
+                         del trader_agent.params[1][index]
 
                     # randomly select 'number_of_strats_to_mutate' number of strats from 'all_strategies'
                     # randomly_selected_strats_to_use = list(np.random.choice(trader_agent.all_strategies, size = number_of_strats_to_mutate, replace = False))
                     randomly_selected_strats_to_use = random.sample(trader_agent.all_strategies, number_of_strats_to_mutate)
 
                     # add these selections to 'strategies_to_use'
-                    trader_agent.strategies_to_use.extend(randomly_selected_strats_to_use)
+                    # trader_agent.strategies_to_use.extend(randomly_selected_strats_to_use)
 
-                    print(f"\nstrategies_to_use: {bot_param}")
-                    print(f"bot_param: {bot_param}")
-                    print(f"trader_agent.strategies_to_use: {trader_agent.strategies_to_use}")
-                    print(f"trader_agent.params[1]: {trader_agent.params[1]}\n")
+                    trader_agent.params[1].extend(randomly_selected_strats_to_use)
+
+                    # print(f"\nstrategies_to_use: {bot_param}")
+                    # print(f"bot_param: {bot_param}")
+                    # print(f"trader_agent.strategies_to_use: {trader_agent.strategies_to_use}")
+                    # print(f"trader_agent.params[1]: {trader_agent.params[1]}\n")
 
                 else:
                     print(f"\nbot_param:\n{bot_param}")
@@ -607,6 +612,13 @@ class EnsembleGeneticAlgorithmOptimizer(object):
             ) for _ in range(self.population_size)
         ]
 
+        for ens_bot in population:
+            _, buy_dnf, sell_dnf = ens_bot.generate_signals()
+
+            print(f"\nbefore GA buy_dnf:\n{buy_dnf}")
+            print(f"before GA sell_dnf:\n{sell_dnf}\n")
+
+
         for i in range(self.num_generations):
 
             print(f"\ngeneration: {i}")
@@ -657,6 +669,15 @@ class EnsembleGeneticAlgorithmOptimizer(object):
             # Replace the old population with the new one
             population = new_population
 
+        print("#############################################")
+
+        for ens_bot in population:
+            _, buy_dnf, sell_dnf = ens_bot.generate_signals()
+
+            print(f"\nafter GA buy_dnf:\n{buy_dnf}")
+            print(f"after GA sell_dnf:\n{sell_dnf}\n")
+
+
         # Return the best-performing trader agent
         fitness_scores = [self.fitness(trader_agent, self.trade_signals, self.fee_percentage) for trader_agent in population]
 
@@ -667,9 +688,11 @@ class EnsembleGeneticAlgorithmOptimizer(object):
 
 if __name__ == "__main__":
 
+    # buy_dnf_with_index
+
     ohlcv_df = utils.get_daily_ohlcv_data()
 
-    ohlcv_df_train, ohlcv_df_test = train_test_split(ohlcv_df, test_size = 0.8, shuffle = False)
+    ohlcv_df_train, ohlcv_df_test = train_test_split(ohlcv_df, test_size = 0.2, shuffle = False)
 
     # train on ohlcv_df_train and test on ohlcv_df_test
     # ohlcv_df_train is 80% of the training data (not sure if it's contiguous - need to make sure it is)
@@ -679,9 +702,9 @@ if __name__ == "__main__":
 
 
     fee_percentage = 0.02
-    population_size = 100
-    mutation_rate = 0.10
-    num_generations = 20
+    population_size = 1
+    mutation_rate = 0.1
+    num_generations = 1
 
     window = 50
     num_standard_deviations = 1.5
@@ -736,7 +759,7 @@ if __name__ == "__main__":
 
     all_strategies = [
         'MACD_bot', 'bollinger_bands_bot', 
-        'overbought_threshold', 'VWAP_bot', 
+        'RSI_bot', 'VWAP_bot', 
         'stochastic_oscillator_bot', 
         'SAR_bot',
         'OBV_trend_following_bot',
@@ -744,8 +767,8 @@ if __name__ == "__main__":
         'ROC_bot'
     ]
 
-    number_of_disjuncts = 2
-    number_of_conjuncts = 5
+    number_of_disjuncts = 5
+    number_of_conjuncts = 2
 
     # instantiate a bot - in this case the stochastic oscillator
     ensb_bot = trader_bots.ensemble_bot(
@@ -755,6 +778,8 @@ if __name__ == "__main__":
         number_of_conjuncts = number_of_conjuncts,
         all_strategies = all_strategies 
     )
+
+    # trader_bots.enumerate_dnfs(ensb_bot, "buy")
 
 
     # strats_used = ensb_bot.get_all_strategies()
@@ -817,8 +842,8 @@ if __name__ == "__main__":
 
     best_final_balance, best_trade_results = utils.execute_trades(best_trade_signals, fee_percentage)
 
-    print(f"Best agent's Trade Results:\n{best_trade_results}")
-    print(f"Best agent's Final Balance:\n{best_final_balance}")
+    # print(f"Best agent's Trade Results:\n{best_trade_results}")
+    # print(f"Best agent's Final Balance:\n{best_final_balance}")
 
     utils.plot_trading_simulation(best_trade_results, "Best")
 
