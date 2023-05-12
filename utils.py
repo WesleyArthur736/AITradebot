@@ -125,6 +125,13 @@ def initialise_bots(ohlcv_df, constituent_bot_parameters):
     return all_bot_signals
 
 def mutate_dnf(dnf, all_strategies):
+    """
+    Example usage/effect of applying this function:
+    
+    dnf         = (A and B and C) or (A and D and E) or (B and E and F)
+    mutated_dnf = mutate_dnf(dnf)
+    mutated_dnf = (A and B and C) or (F and D and E) or (B and E and F)
+    """
 
     # Split the DNF into a list of conjunctions
     conjunctions = dnf.split(" or ")
@@ -217,3 +224,4 @@ def plot_trading_simulation(trade_results, bot_type):
     #     dnf = " or ".join(conjunctions)
         
     #     return dnf
+
