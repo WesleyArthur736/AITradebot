@@ -427,6 +427,7 @@ class EnsembleGeneticAlgorithmOptimizer(object):
             population_size, mutation_rate, num_generations, 
             number_of_disjuncts, number_of_conjuncts, all_strategies
         ):
+
         self.trader_agent = trader_agent
         self.trader_agent_params = trader_agent.params
 
@@ -459,26 +460,26 @@ class EnsembleGeneticAlgorithmOptimizer(object):
 
         child_params = []
 
-        for i in range(len(parent1.params)):
+        for p_1_param, p_2_param in zip(parent1.params, parent2.params):
             if random.random() < 0.5:
-                child_params.append(parent1.params[i])
+                child_params.append(p_1_param)
             else:
-                child_params.append(parent2.params[i])
+                child_params.append(p_2_param)
 
-        # child_bot = type(parent1)(parent1.ohlcv_df, *child_params)
-
+        # ensemble_bot.params = [self.number_of_disjuncts, self.strategies_to_use, self.buy_dnf, self.sell_dnf]
         child_bot = type(self.trader_agent)(
-            parent1.ohlcv_df, 
-            child_params,
-            self.number_of_disjuncts,
-            self.number_of_conjuncts,
-            self.all_strategies
+            self.trader_agent.ohlcv_df,
+            child_params[2],
+            child_params[3],
+            child_params[1],
+            self.trader_agent.constituent_bot_parameters,
+            child_params[0]
         )
 
         return child_bot
 
     # def ensemble_mutate(self, trader_agent, mutation_rate, number_of_strats_to_mutate, max_num_conjuncts, max_num_disjuncts):
-    def ensemble_mutate(self, trader_agent, mutation_rate, number_of_strats_to_mutate):
+    def ensemble_mutate(self, trader_agent, mutation_rate, number_of_strats_to_mutate, all_strategies):
         """
         We only have 9 strategies at present so the max value that 'number_of_strats_to_mutate' can take is 9.
         Similarly the maximum value that max_num_disjuncts and max_num_conjuncts can take is also 9.
@@ -490,58 +491,52 @@ class EnsembleGeneticAlgorithmOptimizer(object):
         """
 
         # Add some Gaussian noise to the parameters, with a variance determined my "param_variance"
-        for bot_param in trader_agent.params:
 
-            if random.random() < mutation_rate:
+        trader_agent.params[2] = utils.mutate_dnf(trader_agent.params[2], all_strategies)
+        trader_agent.params[3] = utils.mutate_dnf(trader_agent.params[3], all_strategies)
 
-                # for 'number_of_disjuncts':
-                if isinstance(bot_param, int):
-                    # bot_param += np.random.randint(2, max_num_conjuncts) # always use at least 2 conjuncts
-                    # new_num_disjuncts = trader_agent.number_of_disjuncts + np.random.randint(-len(trader_agent.all_strategies) + 1, len(trader_agent.all_strategies)) # always use at least 2 conjuncts
-                    new_num_disjuncts = trader_agent.params[0] + np.random.randint(-len(trader_agent.all_strategies) + 1, len(trader_agent.all_strategies)) # always use at least 2 conjuncts
-                    # trader_agent.number_of_disjuncts = new_num_disjuncts
-                    trader_agent.params[0] = new_num_disjuncts
-
-                    # print(f"\nnumber_of_disjuncts: {bot_param}")
-                    # print(f"bot_param: {bot_param}")
-                    # print(f"\ntrader_agent.number_of_disjuncts: {trader_agent.number_of_disjuncts}")
-                    # print(f"trader_agent.params[0]: {trader_agent.params[0]}\n") # explicitely set this too
-
-                # for 'strategies_to_use':
-                elif isinstance(bot_param, list):
-
-                    # remove 'number_of_strats_to_mutate' number of strats from 'strategies_to_use'
-                    # strats_to_remove = np.random.sample(range(len(bot_param)), number_of_strats_to_mutate)
-
-                    # strats_to_remove = random.sample(trader_agent.strategies_to_use, number_of_strats_to_mutate)
-                    strats_to_remove = random.sample(trader_agent.params[1], number_of_strats_to_mutate)
-
-
-                    # for index in sorted(strats_to_remove, reverse = True): # loop through the indices in reverse order and remove the randomly selected elements
-                    #     del trader_agent.strategies_to_use[index]
-                    for index, _ in enumerate(sorted(strats_to_remove, reverse = True)): # loop through the indices in reverse order and remove the randomly selected elements
-                        # del trader_agent.strategies_to_use[index]
-                         del trader_agent.params[1][index]
-
-                    # randomly select 'number_of_strats_to_mutate' number of strats from 'all_strategies'
-                    # randomly_selected_strats_to_use = list(np.random.choice(trader_agent.all_strategies, size = number_of_strats_to_mutate, replace = False))
-                    randomly_selected_strats_to_use = random.sample(trader_agent.all_strategies, number_of_strats_to_mutate)
-
-                    # add these selections to 'strategies_to_use'
-                    # trader_agent.strategies_to_use.extend(randomly_selected_strats_to_use)
-
-                    trader_agent.params[1].extend(randomly_selected_strats_to_use)
-
-                    # print(f"\nstrategies_to_use: {bot_param}")
-                    # print(f"bot_param: {bot_param}")
-                    # print(f"trader_agent.strategies_to_use: {trader_agent.strategies_to_use}")
-                    # print(f"trader_agent.params[1]: {trader_agent.params[1]}\n")
-
-                else:
-                    print(f"\nbot_param:\n{bot_param}")
-                    print(f"type(bot_param):\n{type(bot_param)}\n")
 
         return trader_agent
+
+    # # def ensemble_mutate(self, trader_agent, mutation_rate, number_of_strats_to_mutate, max_num_conjuncts, max_num_disjuncts):
+    # def ensemble_mutate(self, trader_agent, mutation_rate, number_of_strats_to_mutate, all_strategies):
+    #     """
+    #     We only have 9 strategies at present so the max value that 'number_of_strats_to_mutate' can take is 9.
+    #     Similarly the maximum value that max_num_disjuncts and max_num_conjuncts can take is also 9.
+
+    #     The GA shall optimize the number of disjunctions in the dnf and 
+    #     which trading bots are included in each conjunction.
+
+    #     This is number_of_disjuncts and strategies_to_use (respectively)
+    #     """
+
+    #     # Add some Gaussian noise to the parameters, with a variance determined my "param_variance"
+
+    #     ######################################################################################################
+    #     trader_agent.params = [self.number_of_disjuncts, self.strategies_to_use, self.buy_dnf, self.sell_dnf]
+    #     ######################################################################################################
+
+    #     if random.random() < mutation_rate:
+
+    #         new_num_disjuncts = trader_agent.params[0] + np.random.randint(-len(all_strategies) + 1, len(all_strategies)) # always use at least 2 conjuncts
+    #         # trader_agent.number_of_disjuncts = new_num_disjuncts
+    #         trader_agent.params[0] = new_num_disjuncts
+
+    #         # remove 'number_of_strats_to_mutate' strats 
+    #         strats_to_remove = random.sample(trader_agent.params[1], number_of_strats_to_mutate)
+    #         for index, _ in enumerate(sorted(strats_to_remove, reverse = True)): # loop through the indices in reverse order and remove the randomly selected elements
+    #             # del trader_agent.strategies_to_use[index]
+    #              del trader_agent.params[1][index]
+
+    #         randomly_selected_strats_to_use = random.sample(all_strategies, number_of_strats_to_mutate)
+    #         trader_agent.params[1].extend(randomly_selected_strats_to_use)
+
+
+    #     return trader_agent
+
+
+    #####################################################
+
 
     # # def ensemble_mutate(self, trader_agent, mutation_rate, number_of_strats_to_mutate, max_num_conjuncts, max_num_disjuncts):
     # def ensemble_mutate(self, trader_agent, mutation_rate, number_of_strats_to_mutate, max_num_disjuncts):
@@ -597,26 +592,38 @@ class EnsembleGeneticAlgorithmOptimizer(object):
     #     return trader_agent
 
 
-    def run_genetic_algorithm_ensemble(self, n_elite, tournament_size, number_of_strats_to_mutate):
+    def run_genetic_algorithm_ensemble(self, n_elite, tournament_size, number_of_strats_to_mutate, all_strategies):
         """
         Implements 'Elitism' and uses tournament selection for the parents
         """
 
+        # population = [
+        #     type(self.trader_agent)(
+        #         self.ohlcv_df, 
+        #         self.trader_agent.constituent_bot_parameters,
+        #         self.number_of_disjuncts,
+        #         self.number_of_conjuncts,
+        #         self.all_strategies
+        #     ) for _ in range(self.population_size)
+        # ]
+
+
         population = [
             type(self.trader_agent)(
-                self.ohlcv_df, 
+                self.trader_agent.ohlcv_df,
+                self.trader_agent.buy_dnf,
+                self.trader_agent.sell_dnf,
+                self.trader_agent.strategies_to_use,
                 self.trader_agent.constituent_bot_parameters,
-                self.number_of_disjuncts,
-                self.number_of_conjuncts,
-                self.all_strategies
+                self.trader_agent.number_of_disjuncts,
             ) for _ in range(self.population_size)
         ]
 
-        for ens_bot in population:
-            _, buy_dnf, sell_dnf = ens_bot.generate_signals()
+        # for ens_bot in population:
+        #     _, buy_dnf, sell_dnf = ens_bot.generate_signals()
 
-            print(f"\nbefore GA buy_dnf:\n{buy_dnf}")
-            print(f"before GA sell_dnf:\n{sell_dnf}\n")
+        #     print(f"\nbefore GA buy_dnf:\n{buy_dnf}")
+        #     print(f"before GA sell_dnf:\n{sell_dnf}\n")
 
 
         for i in range(self.num_generations):
@@ -661,7 +668,7 @@ class EnsembleGeneticAlgorithmOptimizer(object):
                     child_bot = self.ensemble_uniform_crossover(parent1, parent2)
 
                     # Mutate the child bot with a certain probability
-                    child_bot = self.ensemble_mutate(child_bot, self.mutation_rate, number_of_strats_to_mutate)
+                    child_bot = self.ensemble_mutate(child_bot, self.mutation_rate, number_of_strats_to_mutate, all_strategies)
 
                     # Add the child bot to the new population
                     new_population.append(child_bot)
@@ -671,11 +678,11 @@ class EnsembleGeneticAlgorithmOptimizer(object):
 
         print("#############################################")
 
-        for ens_bot in population:
-            _, buy_dnf, sell_dnf = ens_bot.generate_signals()
+        # for ens_bot in population:
+        #     _, buy_dnf, sell_dnf = ens_bot.generate_signals()
 
-            print(f"\nafter GA buy_dnf:\n{buy_dnf}")
-            print(f"after GA sell_dnf:\n{sell_dnf}\n")
+        #     print(f"\nafter GA buy_dnf:\n{buy_dnf}")
+        #     print(f"after GA sell_dnf:\n{sell_dnf}\n")
 
 
         # Return the best-performing trader agent
@@ -702,9 +709,9 @@ if __name__ == "__main__":
 
 
     fee_percentage = 0.02
-    population_size = 1
+    population_size = 200
     mutation_rate = 0.1
-    num_generations = 1
+    num_generations = 15
 
     window = 50
     num_standard_deviations = 1.5
@@ -770,14 +777,52 @@ if __name__ == "__main__":
     number_of_disjuncts = 5
     number_of_conjuncts = 2
 
+    # init strats randomly 
+    strategies_to_use = utils.select_initial_strats(all_strategies, number_of_conjuncts)
+
+    # construct initial buy_dnf
+    buy_dnf = utils.construct_dnf(
+        trade_type = "buy", 
+        number_of_disjuncts = number_of_disjuncts, 
+        strategies_to_use = strategies_to_use
+    )
+
+    # construct initial sell_dnf
+    sell_dnf = utils.construct_dnf(
+        trade_type = "sell", 
+        number_of_disjuncts = number_of_disjuncts, 
+        strategies_to_use = strategies_to_use
+    )
+
+    # # instantiate a bot - in this case the stochastic oscillator
+    # ensb_bot = trader_bots.ensemble_bot(
+    #     ohlcv_df = ohlcv_df_train,
+    #     buy_dnf = buy_dnf,
+    #     sell_dnf = sell_dnf,
+    #     constituent_bot_parameters = constituent_bot_parameters,
+    #     number_of_disjuncts = number_of_disjuncts,
+    #     number_of_conjuncts = number_of_conjuncts,
+    #     all_strategies = all_strategies 
+    # )
+
     # instantiate a bot - in this case the stochastic oscillator
     ensb_bot = trader_bots.ensemble_bot(
         ohlcv_df = ohlcv_df_train,
+        buy_dnf = buy_dnf,
+        sell_dnf = sell_dnf,
+        strategies_to_use = strategies_to_use,
         constituent_bot_parameters = constituent_bot_parameters,
         number_of_disjuncts = number_of_disjuncts,
-        number_of_conjuncts = number_of_conjuncts,
-        all_strategies = all_strategies 
     )
+
+    # ohlcv_df = 
+    # buy_dnf = 
+    # sell_dnf = 
+    # strategies_to_use = 
+    # constituent_bot_parameters = 
+    # number_of_disjuncts = 
+
+
 
     # trader_bots.enumerate_dnfs(ensb_bot, "buy")
 
@@ -822,6 +867,7 @@ if __name__ == "__main__":
         n_elite = 10,
         tournament_size = 50,
         number_of_strats_to_mutate = 1,
+        all_strategies = all_strategies
     )
 
     """

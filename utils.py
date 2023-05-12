@@ -1,6 +1,7 @@
 from ccxt import kraken
 import matplotlib.pyplot as plt
 from pandas import DataFrame
+import random
 
 
 def get_daily_ohlcv_data():
@@ -64,6 +65,107 @@ def execute_trades(trade_signals, fee_percentage):
 
     return aud_balance, trade_results
 
+def select_initial_strats(all_strategies, number_of_conjuncts):
+    """
+    this shall eventually be optimized by the GA
+    """
+
+    # randomly select "self.number_of_conjuncts" strategies from "self.all_strategies"
+    selected_strats_to_use = random.sample(all_strategies, number_of_conjuncts)
+
+    return selected_strats_to_use
+
+def construct_cnf(trade_type, strategies_to_use):
+    # # Chooses the strategies used in the conjunction.
+    # number_of_strategies_included = random.randint(self.min_literals, self.max_literals)
+    # all_strategies = random.sample(self.strategy_names, number_of_strategies_included)
+
+    # Constructs the conjunction by ANDing the signals from the selected strategies.
+    buy_signals = []
+    # for strategy_name in self.all_strategies: # basically self.all_strategies is "number_of_conjuncts"
+    for strategy_name in strategies_to_use: # basically self.all_strategies is "number_of_conjuncts"
+        bot_signals = f"all_bot_signals['{strategy_name}']"
+        buy_signal = f"{bot_signals}.at[index, '{trade_type}_signal']"
+        buy_signals.append(buy_signal)
+    conjunction = " and ".join(buy_signals)
+    
+    return conjunction
+
+def construct_dnf(trade_type, number_of_disjuncts, strategies_to_use):
+    # # Chooses how many conjunctions are used in the DNF.
+    # number_of_disjuncts = random.randint(1, 4)
+
+    # Constructs the DNF by generating conjunctions and ORing 
+    # them together to make a disjunction of conjunctions.
+    conjunctions = []
+    for i in range(number_of_disjuncts):
+        conjunction = construct_cnf(trade_type, strategies_to_use)
+        conjunctions.append(conjunction)
+    dnf = " or ".join(conjunctions)
+    
+    return dnf
+
+def initialise_bots(ohlcv_df, constituent_bot_parameters):
+
+    all_bot_signals = {}
+
+    for parameter_list in constituent_bot_parameters:
+        # Get the bot name and remove it from the dictionary.
+        # parameter_list_copy = dict(parameter_list)
+        parameter_list_copy = parameter_list.copy() ### Changed from the line above
+
+        # print(f"parameter_list_copy:\n{parameter_list_copy}")
+        bot_name = parameter_list_copy.pop('bot_name')
+        # self.strategy_names.append(bot_name)
+        # self.all_strategies.append(bot_name) #### Now taken care of by self.get_all_strategies
+        # Initialize the bot with its specified parameters and save output signals dataframe.
+        signals_df = globals()[bot_name](ohlcv_df, **parameter_list_copy).generate_signals()
+        all_bot_signals[bot_name] = signals_df
+
+    return all_bot_signals
+
+def mutate_dnf(dnf, all_strategies):
+
+    # Split the DNF into a list of conjunctions
+    conjunctions = dnf.split(" or ")
+    
+    # Select a random conjunction to mutate
+    mutation_idx = random.randint(0, len(conjunctions) - 1)
+
+    mutated_conjunction = conjunctions[mutation_idx]
+    
+    # Split the conjunction into a list of conditions
+    conditions = mutated_conjunction.split(" and ")
+    
+    # Select a random condition to mutate
+    condition_idx = random.randint(0, len(conditions) - 1)
+    mutated_condition = conditions[condition_idx]
+    
+    # Get the current index of the condition in all_bot_signals
+    current_idx = all_strategies.index(mutated_condition.split("[")[1][1:-5])
+
+    # Select a new index that is different from the current one
+    new_idx = random.randint(0, len(all_strategies) - 1)
+    # while new_idx == current_idx:
+    while new_idx == current_idx:
+
+        new_idx = random.randint(0, len(all_strategies) - 1)
+
+        while all_strategies[current_idx] == all_strategies[new_idx]:
+            new_idx = random.randint(0, len(all_strategies) - 1)
+    
+    # Replace the old index with the new one in the mutated condition
+    mutated_condition = mutated_condition.replace(all_strategies[current_idx], all_strategies[new_idx])
+    
+    # Replace the old condition with the mutated one in the mutated conjunction
+    conditions[condition_idx] = mutated_condition
+    mutated_conjunction = " and ".join(conditions)
+    
+    # Replace the old conjunction with the mutated one in the original DNF
+    conjunctions[mutation_idx] = mutated_conjunction
+    mutated_dnf = " or ".join(conjunctions)
+    
+    return mutated_dnf
 
 def plot_trading_simulation(trade_results, bot_type):
     # Create a figure and axis
@@ -83,3 +185,35 @@ def plot_trading_simulation(trade_results, bot_type):
 
     # Display the plot
     plt.show()
+
+
+
+# def construct_cnf(self, trade_type):
+    #     # # Chooses the strategies used in the conjunction.
+    #     # number_of_strategies_included = random.randint(self.min_literals, self.max_literals)
+    #     # all_strategies = random.sample(self.strategy_names, number_of_strategies_included)
+
+    #     # Constructs the conjunction by ANDing the signals from the selected strategies.
+    #     buy_signals = []
+    #     # for strategy_name in self.all_strategies: # basically self.all_strategies is "number_of_conjuncts"
+    #     for strategy_name in self.strategies_to_use: # basically self.all_strategies is "number_of_conjuncts"
+    #         bot_signals = f"all_bot_signals['{strategy_name}']"
+    #         buy_signal = f"{bot_signals}.at[index, '{trade_type}_signal']"
+    #         buy_signals.append(buy_signal)
+    #     conjunction = " and ".join(buy_signals)
+        
+    #     return conjunction
+
+    # def construct_dnf(self, trade_type):
+    #     # # Chooses how many conjunctions are used in the DNF.
+    #     # number_of_disjuncts = random.randint(1, 4)
+
+    #     # Constructs the DNF by generating conjunctions and ORing 
+    #     # them together to make a disjunction of conjunctions.
+    #     conjunctions = []
+    #     for i in range(self.number_of_disjuncts):
+    #         conjunction = self.construct_cnf(trade_type)
+    #         conjunctions.append(conjunction)
+    #     dnf = " or ".join(conjunctions)
+        
+    #     return dnf
