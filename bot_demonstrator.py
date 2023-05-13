@@ -244,7 +244,7 @@ if __name__ == "__main__":
     OBV_trend_reversal_parameters = {'bot_name': 'OBV_trend_reversal_bot'}
     ROC_parameters = {'bot_name': 'ROC_bot', 'window': ROC_win, 'buy_threshold': ROC_bth, 'sell_threshold': ROC_sth}
     AO_parameters = {'bot_name': 'AO_bot', 'window_long':AO_win1, 'window_short':AO_win2}
-    IC_parameters = {'bot_name': 'window_low':, 'window_medium': }
+    IC_parameters = {'bot_name': 'IC_bot', 'window_low':IC_win1, 'window_medium':IC_win2, 'window_high':IC_win3 }
     
     all_parameters = [
         MACD_parameters, 
