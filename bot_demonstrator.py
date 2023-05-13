@@ -202,12 +202,12 @@ if __name__ == "__main__":
 
     fee_percentage = 0.02
     np.random.seed(42)
-    MACD_sigp=np.random.randint(1,15)
-    MACD_low=np.random.randint(MACD_sigp,20)
-    MACD_high=np.random.randint(MACD_low,50)
+    MACD_sigp=np.random.randint(5,10)
+    MACD_low=np.random.randint(11,20)
+    MACD_high=np.random.randint(21,50)
     
     BB_win =np.random.randint(10,30)
-    BBstd = np.random.uniform(1, 2.5)
+    BBstd = np.random.uniform(0.5, 2.5)
     
     RSI_win= np.random.randint(10,30)
     Os_th= np.random.randint(10,50)
@@ -227,6 +227,13 @@ if __name__ == "__main__":
     ROC_bth = np.random.randint(1,20)
     ROC_sth = np.random.randint(-20,-1)
     
+    AO_win1 = np.random.randint(20,40)
+    AO_win2 = np.random.randint(1,10)
+    
+    IC_win1= np.random.randint(1,15)
+    IC_win2= np.random.randint(16,35)
+    IC_win3= np.random.randint(36,70)
+    
     MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': MACD_sigp, 'fast_window': MACD_low, 'signal_window': MACD_high}
     Bollinger_Bands_parameters = {'bot_name': 'bollinger_bands_bot', 'window': BB_win, 'num_standard_deviations': BBstd}
     RSI_parameters = {'bot_name': 'RSI_bot', 'overbought_threshold': Ob_th, 'oversold_threshold': Os_th, 'window': RSI_win}
@@ -236,7 +243,9 @@ if __name__ == "__main__":
     OBV_trend_following_parameters = {'bot_name': 'OBV_trend_following_bot'}
     OBV_trend_reversal_parameters = {'bot_name': 'OBV_trend_reversal_bot'}
     ROC_parameters = {'bot_name': 'ROC_bot', 'window': ROC_win, 'buy_threshold': ROC_bth, 'sell_threshold': ROC_sth}
-
+    AO_parameters = {'bot_name': 'AO_bot', 'window_long':AO_win1, 'window_short':AO_win2}
+    IC_parameters = {'bot_name': 'window_low':, 'window_medium': }
+    
     all_parameters = [
         MACD_parameters, 
         Bollinger_Bands_parameters, 
@@ -246,7 +255,9 @@ if __name__ == "__main__":
         OBV_trend_following_parameters,
         SAR_parameters,
         OBV_trend_reversal_parameters,
-        ROC_parameters
+        ROC_parameters,
+        AO_parameters,
+        IC_parameters
         ]
 
     main(fee_percentage)
