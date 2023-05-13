@@ -2,6 +2,7 @@ from ccxt import kraken
 import matplotlib.pyplot as plt
 from pandas import DataFrame
 
+
 def get_daily_ohlcv_data():
     """ Fetches the most recent 720 days of OHLCV data on BTC/AUD from Kraken.
         Converts data into a Pandas DataFrame with column titles.
