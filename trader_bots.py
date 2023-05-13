@@ -8,6 +8,7 @@ from ta.momentum import StochasticOscillator
 from ta.trend import PSARIndicator
 from ta.volume import OnBalanceVolumeIndicator
 from ta.momentum import ROCIndicator
+from ta.momentum import AwesomeOscillatorIndicator
 import matplotlib.pyplot as plt
 import random
 import utils
@@ -582,7 +583,11 @@ class ensemble_bot(Bot):
 
 
         # Create random DNF expression for buy signal.
-        buy_dnf = utils.construct_dnf(trade_type = "buy")
+        buy_dnf = utils.construct_dnf(
+            trade_type = "buy", 
+            number_of_disjuncts = self.number_of_disjuncts, 
+            strategies_to_use = self.strategies_to_use
+        ) # trade_type, number_of_disjuncts, strategies_to_use
 
         # Evaluate DNF expression for each day of data and save to dataframe.
         for index, row in trade_signals.iterrows():
@@ -592,7 +597,11 @@ class ensemble_bot(Bot):
             trade_signals.at[index, "buy_signal"] = buy_signal # The signal to buy (True or False) at the current row in the data
 
         # Create random DNF expression for sell signal.
-        sell_dnf = utils.construct_dnf(trade_type = "sell")
+        sell_dnf = utils.construct_dnf(
+            trade_type = "sell", 
+            number_of_disjuncts = self.number_of_disjuncts, 
+            strategies_to_use = self.strategies_to_use
+        ) # trade_type, number_of_disjuncts, strategies_to_use
 
         # Evaluate DNF expression for each day of data and save to dataframe.
         for index, row in trade_signals.iterrows():
@@ -605,30 +614,30 @@ class ensemble_bot(Bot):
 
 
 
-def enumerate_dnfs(ensemble_bot, trade_type):
+# def enumerate_dnfs(ensemble_bot, trade_type):
 
-    # Creates a copy of the DataFrame to avoid modifying the original.
-    trade_signals = ensemble_bot.ohlcv_df.copy()
+#     # Creates a copy of the DataFrame to avoid modifying the original.
+#     trade_signals = ensemble_bot.ohlcv_df.copy()
 
-    all_bot_signals = ensemble_bot.initialise_bots()
+#     all_bot_signals = ensemble_bot.initialise_bots()
 
-    # Create random DNF expression for buy signal.
-    dnf = utils.construct_dnf(trade_type = trade_type)
+#     # Create random DNF expression for buy signal.
+#     dnf = utils.construct_dnf(trade_type = trade_type)
 
-    buy_signals = []
+#     buy_signals = []
 
-    dnf_with_index_list = []
+#     dnf_with_index_list = []
 
-    # Evaluate DNF expression for each day of data and save to dataframe.
-    for index, row in trade_signals.iterrows():
-        dnf_with_index = dnf.replace("index", str(index))
-        dnf_with_index_list.append(dnf_with_index)
-        buy_signal = eval(dnf_with_index)
-        buy_signals.append(buy_signal)
-        trade_signals.at[index, "buy_signal"] = buy_signal 
+#     # Evaluate DNF expression for each day of data and save to dataframe.
+#     for index, row in trade_signals.iterrows():
+#         dnf_with_index = dnf.replace("index", str(index))
+#         dnf_with_index_list.append(dnf_with_index)
+#         buy_signal = eval(dnf_with_index)
+#         buy_signals.append(buy_signal)
+#         trade_signals.at[index, "buy_signal"] = buy_signal 
 
-    for idx, dnf in enumerate(dnf_with_index_list):
-        print(f"\n{trade_type} dnf for index: {idx} of trade_signals:\n{dnf}\n")
+#     for idx, dnf in enumerate(dnf_with_index_list):
+#         print(f"\n{trade_type} dnf for index: {idx} of trade_signals:\n{dnf}\n")
 
 
 

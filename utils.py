@@ -3,6 +3,10 @@ import matplotlib.pyplot as plt
 from pandas import DataFrame
 import random
 
+from trader_bots import MACD_bot, bollinger_bands_bot, RSI_bot, VWAP_bot, stochastic_oscillator_bot, SAR_bot, OBV_trend_following_bot, OBV_trend_reversal_bot, ROC_bot, Awesome_Oscillator_Bot
+
+
+
 
 def get_daily_ohlcv_data():
     """ Fetches the most recent 720 days of OHLCV data on BTC/AUD from Kraken.
@@ -121,12 +125,12 @@ def initialise_bots(ohlcv_df, constituent_bot_parameters):
         # Initialize the bot with its specified parameters and save output signals dataframe.
         # signals_df = globals()[bot_name](ohlcv_df, **parameter_list_copy).generate_signals()
 
-        # signals_df = globals()[bot_name](ohlcv_df, **parameter_list).generate_signals()
+        signals_df = globals()[bot_name](ohlcv_df, **parameter_list_copy).generate_signals()
 
-        signals_df, buy_dnf, sell_dnf = type(bot_name)(
-            ohlcv_df,
-            **parameter_list
-        ).generate_signals()
+        # signals_df, buy_dnf, sell_dnf = type(bot_name)(
+        #     ohlcv_df,
+        #     **parameter_list
+        # ).generate_signals()
 
         all_bot_signals[bot_name] = signals_df
 
