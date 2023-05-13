@@ -1,5 +1,6 @@
 import trader_bots 
 import utils
+import numpy as np
 
 def main(fee_percentage):
     ohlcv_df = utils.get_daily_ohlcv_data()
@@ -200,11 +201,25 @@ def main(fee_percentage):
 if __name__ == "__main__":
 
     fee_percentage = 0.02
-
-    MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': 26, 'fast_window': 12, 'signal_window': 9}
-    Bollinger_Bands_parameters = {'bot_name': 'bollinger_bands_bot', 'window': 20, 'num_standard_deviations': 2.5}
-    RSI_parameters = {'bot_name': 'RSI_bot', 'overbought_threshold': 70, 'oversold_threshold': 30, 'window': 14}
-    VWAP_parameters = {'bot_name': 'VWAP_bot', 'window': 20}
+    np.random.seed(42)
+    MACD_sigp=np.random.randint(1,15)
+    MACD_low=np.random.randint(MACD_sigp,20)
+    MACD_high=np.random.randint(MACD_low,50)
+    
+    BB_win =np.random.randint(10,30)
+    BBstd = np.random.uniform(1, 2.5)
+    
+    RSI_win= np.random.randint(10,30)
+    Os_th= np.random.randint(10,50)
+    Ob_th= np.random.randint(51,90)
+    
+    vwap_win = np.random.randint(10,30)
+    
+    
+    MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': MACD_sigp, 'fast_window': MACD_low, 'signal_window': MACD_high}
+    Bollinger_Bands_parameters = {'bot_name': 'bollinger_bands_bot', 'window': BB_win, 'num_standard_deviations': BBstd}
+    RSI_parameters = {'bot_name': 'RSI_bot', 'overbought_threshold': Ob_th, 'oversold_threshold': Os_th, 'window': RSI_win}
+    VWAP_parameters = {'bot_name': 'VWAP_bot', 'window': vwap_win}
     Stochastic_Oscillator_parameters = {'bot_name': 'stochastic_oscillator_bot', 'oscillator_window': 14, 'signal_window': 3, 'overbought_threshold': 80, 'oversold_threshold': 20}
     SAR_parameters = {'bot_name': 'SAR_bot', 'step': 0.02, 'max_step': 0.2}
     OBV_trend_following_parameters = {'bot_name': 'OBV_trend_following_bot'}
