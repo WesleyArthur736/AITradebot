@@ -226,6 +226,7 @@ class EnsembleGeneticAlgorithmOptimizer(object):
             all_strategies = all_strategies,
             num_disjuncts_mutate = num_disjuncts_mutate
         )
+
         trader_agent.params[3] = utils.mutate_dnf(
             trader_agent.params[3], 
             is_buy_dnf = False, 
@@ -350,9 +351,9 @@ if __name__ == "__main__":
     ROC_parameters = {'bot_name': 'ROC_bot', 'window': 12, 'buy_threshold': 5, 'sell_threshold': -5}
     Awesome_Osillator = {'bot_name': 'Awesome_Oscillator_Bot', 'window1': 5 , 'window2': 34}
 
-    constituent_bot_parameters = [
-        MACD_parameters, 
+    constituent_bot_parameters = [ 
         Bollinger_Bands_parameters, 
+        MACD_parameters,
         RSI_parameters, 
         VWAP_parameters, 
         Stochastic_Oscillator_parameters,
