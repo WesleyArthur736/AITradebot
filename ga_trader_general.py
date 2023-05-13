@@ -240,16 +240,14 @@ class EnsembleGeneticAlgorithmOptimizer(object):
         """
         Implements 'Elitism' and uses tournament selection for the parents
         """
-        # population = [
-        #     type(self.trader_agent)(
-        #         self.trader_agent.ohlcv_df,
-        #         self.trader_agent.buy_dnf,
-        #         self.trader_agent.sell_dnf,
-        #         self.trader_agent.strategies_to_use,
-        #         self.trader_agent.constituent_bot_parameters,
-        #         self.trader_agent.number_of_disjuncts,
-        #     ) for _ in range(self.population_size)
-        # ]
+        # ohlcv_df = 
+        # buy_dnf = 
+        # sell_dnf = 
+        # strategies_to_use = 
+        # constituent_bot_parameters = 
+        # number_of_disjuncts = 
+        # all_strategies = 
+        # number_of_conjuncts = 
 
         population = [
             type(self.trader_agent)(
@@ -257,34 +255,52 @@ class EnsembleGeneticAlgorithmOptimizer(object):
                 buy_dnf = utils.construct_dnf(
                     trade_type = "buy", 
                     number_of_disjuncts = init_number_of_disjuncts, 
-                    strategies_to_use = init_strategies_to_use
+                    strategies_to_use = init_strategies_to_use,
+                    all_strategies = all_strategies,
+                    number_of_conjuncts = init_number_of_conjuncts
                 ),
                 sell_dnf = utils.construct_dnf(
                     trade_type = "sell", 
                     number_of_disjuncts = init_number_of_disjuncts, 
-                    strategies_to_use = init_strategies_to_use
+                    strategies_to_use = init_strategies_to_use,
+                    all_strategies = all_strategies,
+                    number_of_conjuncts = init_number_of_conjuncts
                 ),
                 strategies_to_use = utils.select_initial_strats(all_strategies, number_of_conjuncts = random.randint(1, 3)),
                 constituent_bot_parameters = self.trader_agent.constituent_bot_parameters,
                 number_of_disjuncts = random.randint(2, 5),
-            ) for _ in range(self.population_size)
+                all_strategies = all_strategies,
+                number_of_conjuncts = init_number_of_conjuncts
+            ) for i in range(self.population_size)
         ]
 
-        #  # construct initial buy_dnf
-        # init_buy_dnf = utils.construct_dnf(
-        #     trade_type = "buy", 
-        #     number_of_disjuncts = init_number_of_disjuncts, 
-        #     strategies_to_use = init_strategies_to_use
-        # )
-
-        # # construct initial sell_dnf
-        # init_sell_dnf = utils.construct_dnf(
-        #     trade_type = "sell", 
-        #     number_of_disjuncts = init_number_of_disjuncts, 
-        #     strategies_to_use = init_strategies_to_use
-        # )
+        # population = [
+        #     type(self.trader_agent)(
+        #         ohlcv_df = self.trader_agent.ohlcv_df,
+        #         buy_dnf = utils.construct_dnf(
+        #             trade_type = "buy", 
+        #             number_of_disjuncts = init_number_of_disjuncts, 
+        #             strategies_to_use = init_strategies_to_use # THIS IS POTENTIALLY AN ISSUE
+        #         ),
+        #         sell_dnf = utils.construct_dnf(
+        #             trade_type = "sell", 
+        #             number_of_disjuncts = init_number_of_disjuncts, 
+        #             strategies_to_use = init_strategies_to_use # THIS IS 
+        #         ),
+        #         strategies_to_use = utils.select_initial_strats(all_strategies, number_of_conjuncts = random.randint(1, 3)),
+        #         constituent_bot_parameters = self.trader_agent.constituent_bot_parameters,
+        #         number_of_disjuncts = random.randint(2, 5),
+        #     ) for _ in range(self.population_size)
+        # ]
 
         for i in range(self.num_generations):
+
+            instance_1 = population[0]
+            instance_2 = population[1]
+            print(f"\n\ninstance_1 buy_dnf:\n{instance_1.buy_dnf}")
+            print(f"instance_1 sell_dnf:\n{instance_1.sell_dnf}\n")
+            print(f"instance_2 buy_dnf:\n{instance_2.buy_dnf}")
+            print(f"instance_2 sell_dnf:\n{instance_2.sell_dnf}\n\n")
 
             print(f"\ngeneration: {i}")
 
@@ -331,16 +347,6 @@ class EnsembleGeneticAlgorithmOptimizer(object):
                     # Add the child bot to the new population
                     new_population.append(child_bot)
 
-            instance_1 = new_population[0]
-            instance_2 = new_population[1]
-
-
-            print(f"\n\ninstance_1 buy_dnf:\n{instance_1.buy_dnf}")
-            print(f"instance_1 sell_dnf:\n{instance_1.sell_dnf}\n")
-
-            print(f"instance_2 buy_dnf:\n{instance_2.buy_dnf}")
-            print(f"instance_2 sell_dnf:\n{instance_2.sell_dnf}\n\n")
-
 
             # Replace the old population with the new one
             population = new_population
@@ -361,7 +367,7 @@ if __name__ == "__main__":
     fee_percentage = 0.02
     population_size = 2
     mutation_rate = 0.1
-    num_generations = 4
+    num_generations = 10
     window = 50
     num_standard_deviations = 1.5
     overbought_threshold = 11
@@ -428,15 +434,20 @@ if __name__ == "__main__":
     init_buy_dnf = utils.construct_dnf(
         trade_type = "buy", 
         number_of_disjuncts = init_number_of_disjuncts, 
-        strategies_to_use = init_strategies_to_use
+        strategies_to_use = init_strategies_to_use,
+        all_strategies = all_strategies,
+        number_of_conjuncts = init_number_of_conjuncts
     )
 
     # construct initial sell_dnf
     init_sell_dnf = utils.construct_dnf(
         trade_type = "sell", 
         number_of_disjuncts = init_number_of_disjuncts, 
-        strategies_to_use = init_strategies_to_use
+        strategies_to_use = init_strategies_to_use,
+        all_strategies = all_strategies,
+        number_of_conjuncts = init_number_of_conjuncts
     )
+
 
     # instantiate a bot - in this case the stochastic oscillator
     ensb_bot = trader_bots.ensemble_bot(
@@ -446,7 +457,11 @@ if __name__ == "__main__":
         strategies_to_use = init_strategies_to_use,
         constituent_bot_parameters = constituent_bot_parameters,
         number_of_disjuncts = init_number_of_disjuncts,
+        all_strategies = all_strategies,
+        number_of_conjuncts = init_number_of_conjuncts
     )
+
+    # construct_dnf
 
     # generate the trading signals with the bot's technical indicator:
     trade_signals, buy_dnf, sell_dnf = ensb_bot.generate_signals()
@@ -498,7 +513,16 @@ if __name__ == "__main__":
 
 
 
-
+        # population = [
+        #     type(self.trader_agent)(
+        #         self.trader_agent.ohlcv_df,
+        #         self.trader_agent.buy_dnf,
+        #         self.trader_agent.sell_dnf,
+        #         self.trader_agent.strategies_to_use,
+        #         self.trader_agent.constituent_bot_parameters,
+        #         self.trader_agent.number_of_disjuncts,
+        #     ) for _ in range(self.population_size)
+        # ]
 
 
 

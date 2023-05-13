@@ -555,7 +555,7 @@ class Awesome_Oscillator_Bot:
 
 class ensemble_bot(Bot):
 
-    def __init__(self, ohlcv_df, buy_dnf, sell_dnf, strategies_to_use, constituent_bot_parameters, number_of_disjuncts):
+    def __init__(self, ohlcv_df, buy_dnf, sell_dnf, strategies_to_use, constituent_bot_parameters, number_of_disjuncts, all_strategies, number_of_conjuncts):
         """
         ohlcv_df: the dataframe of ohlcv data in the desired format
         constituent_bot_parameters: a list of dictionaries that specify each constituent bot and its indicator parameters
@@ -569,8 +569,10 @@ class ensemble_bot(Bot):
 
         self.buy_dnf = buy_dnf
         self.sell_dnf = sell_dnf
+        self.all_strategies = all_strategies
         self.strategies_to_use = strategies_to_use # a subset of "self.all_strategies", used in constructing each conjunction
         self.number_of_disjuncts = number_of_disjuncts
+        self.number_of_conjuncts = number_of_conjuncts
 
         self.params = [self.number_of_disjuncts, self.strategies_to_use, self.buy_dnf, self.sell_dnf]
 
@@ -586,7 +588,9 @@ class ensemble_bot(Bot):
         buy_dnf = utils.construct_dnf(
             trade_type = "buy", 
             number_of_disjuncts = self.number_of_disjuncts, 
-            strategies_to_use = self.strategies_to_use
+            strategies_to_use = self.strategies_to_use,
+            all_strategies = self.all_strategies,
+            number_of_conjuncts = self.number_of_conjuncts
         ) # trade_type, number_of_disjuncts, strategies_to_use
 
         # Evaluate DNF expression for each day of data and save to dataframe.
@@ -600,7 +604,9 @@ class ensemble_bot(Bot):
         sell_dnf = utils.construct_dnf(
             trade_type = "sell", 
             number_of_disjuncts = self.number_of_disjuncts, 
-            strategies_to_use = self.strategies_to_use
+            strategies_to_use = self.strategies_to_use,
+            all_strategies = self.all_strategies,
+            number_of_conjuncts = self.number_of_conjuncts
         ) # trade_type, number_of_disjuncts, strategies_to_use
 
         # Evaluate DNF expression for each day of data and save to dataframe.

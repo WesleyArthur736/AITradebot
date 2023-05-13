@@ -95,7 +95,7 @@ def construct_cnf(trade_type, strategies_to_use):
     
     return conjunction
 
-def construct_dnf(trade_type, number_of_disjuncts, strategies_to_use):
+def construct_dnf(trade_type, number_of_disjuncts, strategies_to_use, all_strategies, number_of_conjuncts):
     # # Chooses how many conjunctions are used in the DNF.
     # number_of_disjuncts = random.randint(1, 4)
 
@@ -103,6 +103,7 @@ def construct_dnf(trade_type, number_of_disjuncts, strategies_to_use):
     # them together to make a disjunction of conjunctions.
     conjunctions = []
     for i in range(number_of_disjuncts):
+        strategies_to_use = random.sample(all_strategies, number_of_conjuncts)
         conjunction = construct_cnf(trade_type, strategies_to_use)
         conjunctions.append(conjunction)
     dnf = " or ".join(conjunctions)
