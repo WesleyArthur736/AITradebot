@@ -298,13 +298,6 @@ class EnsembleGeneticAlgorithmOptimizer(object):
 
         for i in range(self.num_generations):
 
-            instance_1 = population[0]
-            instance_2 = population[1]
-            print(f"\n\ninstance_1 buy_dnf:\n{instance_1.buy_dnf}")
-            print(f"instance_1 sell_dnf:\n{instance_1.sell_dnf}\n")
-            print(f"instance_2 buy_dnf:\n{instance_2.buy_dnf}")
-            print(f"instance_2 sell_dnf:\n{instance_2.sell_dnf}\n\n")
-
             print(f"\ngeneration: {i}")
 
             # Evaluate the fitness of each trader agent
@@ -368,7 +361,7 @@ if __name__ == "__main__":
     ohlcv_df_train, ohlcv_df_test = train_test_split(ohlcv_df, test_size = 0.2, shuffle = False)
 
     fee_percentage = 0.02
-    population_size = 2
+    population_size = 100
     mutation_rate = 0.1
     num_generations = 10
     window = 50
@@ -389,7 +382,7 @@ if __name__ == "__main__":
     fast_window = 12
     signal_window = 9
 
-    n_elite = 10
+    n_elite = 2
     number_of_strats_to_mutate = 1
     max_num_conjuncts = 10
 
@@ -497,6 +490,9 @@ if __name__ == "__main__":
 
     # generate the trading signals with the bot's technical indicator:
     best_trade_signals, best_buy_dnf, best_sell_dnf = best_agent.generate_signals()
+
+    print(f"\nbest buy_dnf:\n{best_buy_dnf}")
+    print(f"\nbest sell_dnf:\n{best_sell_dnf}\n")
 
     # print(f"Best agent's Trade Signals:\n{best_trade_signals}")
 
