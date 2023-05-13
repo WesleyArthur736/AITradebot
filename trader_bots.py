@@ -500,11 +500,60 @@ class ROC_bot(Bot):
 
         return trade_signals
 
+class Awesome_Oscillator_Bot:
+    def __init__(self, ohlcv_df, window1, window2):
+        self.ohlcv_df = ohlcv_df
+        self.window1 = window1
+        self.window2 = window2
+
+        self.params = [self.window1, self.window2]
+
+    def generate_signals(self):
+        # Creates a copy of the DataFrame to avoid modifying the original.
+        trade_signals = self.ohlcv_df.copy()
+
+        # Get the High and Low Prices
+        high_price = trade_signals['high']
+        low_price = trade_signals['low']
+
+        # Compute the Awesome Indicator
+        ao_indicator = AwesomeOscillatorIndicator(
+            high=high_price,
+            low=low_price,
+            window1=self.window1,
+            window2=self.window2
+        )
+
+        trade_signals['ao'] = ao_indicator.awesome_oscillator()
+
+        # Initialises output columns.
+        # Initialises output column for the buy signals.
+        trade_signals["buy_signal"] = False
+        # Initialises output column for the sell signals.
+        trade_signals["sell_signal"] = False
+
+        for index, row in trade_signals.iterrows():
+            # Evaluate literals
+            # buying pressure
+            awesome_above_zero = trade_signals.at[index, 'ao'] > 0
+            # selling pressure
+            awesome_below_zero = trade_signals.at[index, 'ao'] < 0
+
+            # Evaluates buy and sell conjunctions to determine buy and sell signals.
+            buy_signal = awesome_above_zero
+            sell_signal = awesome_below_zero
+
+            # Records buy and sell signals.
+            trade_signals.at[index, "buy_signal"] = buy_signal
+            trade_signals.at[index, "sell_signal"] = sell_signal
+
+        # Drops the unwanted columns from trade_signals.
+        trade_signals = trade_signals.drop(columns=['ao'])
+
+        return trade_signals
 
 class ensemble_bot(Bot):
 
-    # def __init__(self, ohlcv_df, buy_dnf, sell_dnf, constituent_bot_parameters, number_of_disjuncts, number_of_conjuncts, all_strategies):
-    # def __init__(self, ohlcv_df, buy_dnf, sell_dnf, strategies_to_use, constituent_bot_parameters, number_of_disjuncts, number_of_conjuncts):
     def __init__(self, ohlcv_df, buy_dnf, sell_dnf, strategies_to_use, constituent_bot_parameters, number_of_disjuncts):
         """
         ohlcv_df: the dataframe of ohlcv data in the desired format
@@ -515,59 +564,14 @@ class ensemble_bot(Bot):
         """
         super().__init__(ohlcv_df)
         self.constituent_bot_parameters = constituent_bot_parameters
-        # self.all_strategies = all_strategies
-        # self.all_strategies = self.get_all_strategies()
-
-        # self.params = [self.number_of_disjuncts, self.strategies_to_use]
         self.bot_type = "Ensemble"
 
         self.buy_dnf = buy_dnf
         self.sell_dnf = sell_dnf
         self.strategies_to_use = strategies_to_use # a subset of "self.all_strategies", used in constructing each conjunction
         self.number_of_disjuncts = number_of_disjuncts
-        # self.number_of_conjuncts = number_of_conjuncts
 
         self.params = [self.number_of_disjuncts, self.strategies_to_use, self.buy_dnf, self.sell_dnf]
-
-    # def select_strats(self):
-    #     """
-    #     this shall eventually be optimized by the GA
-    #     """
-
-    #     # randomly select "self.number_of_conjuncts" strategies from "self.all_strategies"
-    #     selected_strats_to_use = random.sample(self.all_strategies, self.number_of_conjuncts)
-
-    #     return selected_strats_to_use
-
-    # def get_all_strategies(self):
-
-    #     strats_used = []
-
-    #     for strat in self.strategies_to_use:
-    
-    #         strats_used.append(strat)
-
-    #     return strats_used
-
-    
-    # def initialise_bots(self):
-
-    #     all_bot_signals = {}
-
-    #     for parameter_list in self.constituent_bot_parameters:
-    #         # Get the bot name and remove it from the dictionary.
-    #         # parameter_list_copy = dict(parameter_list)
-    #         parameter_list_copy = parameter_list.copy() ### Changed from the line above
-
-    #         # print(f"parameter_list_copy:\n{parameter_list_copy}")
-    #         bot_name = parameter_list_copy.pop('bot_name')
-    #         # self.strategy_names.append(bot_name)
-    #         # self.all_strategies.append(bot_name) #### Now taken care of by self.get_all_strategies
-    #         # Initialize the bot with its specified parameters and save output signals dataframe.
-    #         signals_df = globals()[bot_name](self.ohlcv_df, **parameter_list_copy).generate_signals()
-    #         all_bot_signals[bot_name] = signals_df
-
-    #     return all_bot_signals
 
     def generate_signals(self):
         # Creates a copy of the DataFrame to avoid modifying the original.
@@ -598,21 +602,6 @@ class ensemble_bot(Bot):
 
         return trade_signals, buy_dnf, sell_dnf # added buy_dnf, sell_dnf
 
-    # def get_all_strategies(self):
-
-    #     strats_used = []
-
-    #     for parameter_list in self.strategies_to_use:
-    #         # Get the bot name and remove it from the dictionary.
-    #         # parameter_list_copy = dict(parameter_list)
-    #         parameter_list_copy = parameter_list.copy() ### Changed from the line above
-
-    #         # print(f"parameter_list_copy:\n{parameter_list_copy}")
-    #         bot_name = parameter_list_copy.pop('bot_name')
-    #         # self.strategy_names.append(bot_name)
-    #         strats_used.append(bot_name)
-
-    #     return strats_used
 
 
 
@@ -640,3 +629,163 @@ def enumerate_dnfs(ensemble_bot, trade_type):
 
     for idx, dnf in enumerate(dnf_with_index_list):
         print(f"\n{trade_type} dnf for index: {idx} of trade_signals:\n{dnf}\n")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# class ensemble_bot(Bot):
+
+#     # def __init__(self, ohlcv_df, buy_dnf, sell_dnf, constituent_bot_parameters, number_of_disjuncts, number_of_conjuncts, all_strategies):
+#     # def __init__(self, ohlcv_df, buy_dnf, sell_dnf, strategies_to_use, constituent_bot_parameters, number_of_disjuncts, number_of_conjuncts):
+#     def __init__(self, ohlcv_df, buy_dnf, sell_dnf, strategies_to_use, constituent_bot_parameters, number_of_disjuncts):
+#         """
+#         ohlcv_df: the dataframe of ohlcv data in the desired format
+#         constituent_bot_parameters: a list of dictionaries that specify each constituent bot and its indicator parameters
+#         number_of_disjuncts: the number of disjuncts to use in the final buy/sell DNF
+#         number_of_conjuncts: the number of unique trading strategies (unique individual bots) to use in constructng a conjunction 
+#         all_strategies: a list of all the individual bots (technical indicators)
+#         """
+#         super().__init__(ohlcv_df)
+#         self.constituent_bot_parameters = constituent_bot_parameters
+#         # self.all_strategies = all_strategies
+#         # self.all_strategies = self.get_all_strategies()
+
+#         # self.params = [self.number_of_disjuncts, self.strategies_to_use]
+#         self.bot_type = "Ensemble"
+
+#         self.buy_dnf = buy_dnf
+#         self.sell_dnf = sell_dnf
+#         self.strategies_to_use = strategies_to_use # a subset of "self.all_strategies", used in constructing each conjunction
+#         self.number_of_disjuncts = number_of_disjuncts
+#         # self.number_of_conjuncts = number_of_conjuncts
+
+#         self.params = [self.number_of_disjuncts, self.strategies_to_use, self.buy_dnf, self.sell_dnf]
+
+#     # def select_strats(self):
+#     #     """
+#     #     this shall eventually be optimized by the GA
+#     #     """
+
+#     #     # randomly select "self.number_of_conjuncts" strategies from "self.all_strategies"
+#     #     selected_strats_to_use = random.sample(self.all_strategies, self.number_of_conjuncts)
+
+#     #     return selected_strats_to_use
+
+#     # def get_all_strategies(self):
+
+#     #     strats_used = []
+
+#     #     for strat in self.strategies_to_use:
+    
+#     #         strats_used.append(strat)
+
+#     #     return strats_used
+
+    
+#     # def initialise_bots(self):
+
+#     #     all_bot_signals = {}
+
+#     #     for parameter_list in self.constituent_bot_parameters:
+#     #         # Get the bot name and remove it from the dictionary.
+#     #         # parameter_list_copy = dict(parameter_list)
+#     #         parameter_list_copy = parameter_list.copy() ### Changed from the line above
+
+#     #         # print(f"parameter_list_copy:\n{parameter_list_copy}")
+#     #         bot_name = parameter_list_copy.pop('bot_name')
+#     #         # self.strategy_names.append(bot_name)
+#     #         # self.all_strategies.append(bot_name) #### Now taken care of by self.get_all_strategies
+#     #         # Initialize the bot with its specified parameters and save output signals dataframe.
+#     #         signals_df = globals()[bot_name](self.ohlcv_df, **parameter_list_copy).generate_signals()
+#     #         all_bot_signals[bot_name] = signals_df
+
+#     #     return all_bot_signals
+
+#     def generate_signals(self):
+#         # Creates a copy of the DataFrame to avoid modifying the original.
+#         trade_signals = self.ohlcv_df.copy()
+
+#         # all_bot_signals = self.initialise_bots()
+#         all_bot_signals = utils.initialise_bots(trade_signals, self.constituent_bot_parameters)
+
+
+#         # Create random DNF expression for buy signal.
+#         buy_dnf = utils.construct_dnf(trade_type = "buy")
+
+#         # Evaluate DNF expression for each day of data and save to dataframe.
+#         for index, row in trade_signals.iterrows():
+#             buy_dnf_with_index = buy_dnf.replace("index", str(index)) # the actual DNF expression 
+#             # print(f"\nbuy_dnf_with_index:\n{buy_dnf_with_index}\n")
+#             buy_signal = eval(buy_dnf_with_index) # True or False
+#             trade_signals.at[index, "buy_signal"] = buy_signal # The signal to buy (True or False) at the current row in the data
+
+#         # Create random DNF expression for sell signal.
+#         sell_dnf = utils.construct_dnf(trade_type = "sell")
+
+#         # Evaluate DNF expression for each day of data and save to dataframe.
+#         for index, row in trade_signals.iterrows():
+#             sell_dnf_with_index = sell_dnf.replace("index", str(index))
+#             sell_signal = eval(sell_dnf_with_index)
+#             trade_signals.at[index, "sell_signal"] = sell_signal 
+
+#         return trade_signals, buy_dnf, sell_dnf # added buy_dnf, sell_dnf
+
+#     # def get_all_strategies(self):
+
+#     #     strats_used = []
+
+#     #     for parameter_list in self.strategies_to_use:
+#     #         # Get the bot name and remove it from the dictionary.
+#     #         # parameter_list_copy = dict(parameter_list)
+#     #         parameter_list_copy = parameter_list.copy() ### Changed from the line above
+
+#     #         # print(f"parameter_list_copy:\n{parameter_list_copy}")
+#     #         bot_name = parameter_list_copy.pop('bot_name')
+#     #         # self.strategy_names.append(bot_name)
+#     #         strats_used.append(bot_name)
+
+#     #     return strats_used
+
+
+
+# def enumerate_dnfs(ensemble_bot, trade_type):
+
+#     # Creates a copy of the DataFrame to avoid modifying the original.
+#     trade_signals = ensemble_bot.ohlcv_df.copy()
+
+#     all_bot_signals = ensemble_bot.initialise_bots()
+
+#     # Create random DNF expression for buy signal.
+#     dnf = utils.construct_dnf(trade_type = trade_type)
+
+#     buy_signals = []
+
+#     dnf_with_index_list = []
+
+#     # Evaluate DNF expression for each day of data and save to dataframe.
+#     for index, row in trade_signals.iterrows():
+#         dnf_with_index = dnf.replace("index", str(index))
+#         dnf_with_index_list.append(dnf_with_index)
+#         buy_signal = eval(dnf_with_index)
+#         buy_signals.append(buy_signal)
+#         trade_signals.at[index, "buy_signal"] = buy_signal 
+
+#     for idx, dnf in enumerate(dnf_with_index_list):
+#         print(f"\n{trade_type} dnf for index: {idx} of trade_signals:\n{dnf}\n")

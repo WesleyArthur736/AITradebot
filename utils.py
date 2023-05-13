@@ -124,14 +124,22 @@ def initialise_bots(ohlcv_df, constituent_bot_parameters):
 
     return all_bot_signals
 
-def mutate_dnf(dnf, all_strategies):
+def mutate_dnf(dnf, is_buy_dnf, all_strategies, num_disjuncts_mutate = 0):
     """
     Example usage/effect of applying this function:
-    
-    dnf         = (A and B and C) or (A and D and E) or (B and E and F)
-    mutated_dnf = mutate_dnf(dnf)
-    mutated_dnf = (A and B and C) or (F and D and E) or (B and E and F)
+
+    dnf           = (A and B and C) or (A and D and E) or (B and E and F)
+    mutated_dnf   = mutate_dnf(dnf, all_strategies)
+    mutated_dnf   = (A and B and C) or (F and D and E) or (B and E and F)
+
+    mutated_dnf_2 = mutate_dnf(dnf, all_strategies, num_disjuncts_mutate=2)
+    mutated_dnf_2 = (A and B and C) or (F and D and E) or (B and E and F) or H or (A and G and H) or (I and J and K)
     """
+
+    if is_buy_dnf == True:
+        signal_type = "buy_signal"
+    else:
+        signal_type = "sell_signal"
 
     # Split the DNF into a list of conjunctions
     conjunctions = dnf.split(" or ")
@@ -147,6 +155,9 @@ def mutate_dnf(dnf, all_strategies):
     # Select a random condition to mutate
     condition_idx = random.randint(0, len(conditions) - 1)
     mutated_condition = conditions[condition_idx]
+
+    # print(f"mutated_condition: {mutated_condition}")
+    # print(f'mutated_condition.split(".")[1][10:]: {mutated_condition.split(".")[1][10:]}')
     
     # Get the current index of the condition in all_bot_signals
     current_idx = all_strategies.index(mutated_condition.split("[")[1][1:-5])
@@ -170,9 +181,128 @@ def mutate_dnf(dnf, all_strategies):
     
     # Replace the old conjunction with the mutated one in the original DNF
     conjunctions[mutation_idx] = mutated_conjunction
+    
+    # Add/subtract num_disjuncts_mutate new disjuncts to the mutated DNF
+    if num_disjuncts_mutate > 0:
+        new_disjuncts = random.sample(all_strategies, num_disjuncts_mutate)
+
+        new_disjuncts = [f"all_bot_signals['{new_disjunct}'].at[index, '{signal_type}']" for new_disjunct in new_disjuncts]
+
+        new_conjunctions = [" and ".join(random.sample(new_disjuncts, random.randint(1, len(new_disjuncts)))) for _ in range(num_disjuncts_mutate)]
+
+        for new_conjunction in new_conjunctions:
+            while new_conjunctions in conjunctions:
+                new_conjunctions = [" and ".join(random.sample(new_disjuncts, random.randint(1, len(new_disjuncts)))) for _ in range(num_disjuncts_mutate)]
+        conjunctions.extend(new_conjunctions)
+
+    elif num_disjuncts_mutate < 0:
+        num_disjuncts_mutate = min(abs(num_disjuncts_mutate), len(conjunctions))
+        del conjunctions[-num_disjuncts_mutate:]
+    
     mutated_dnf = " or ".join(conjunctions)
     
     return mutated_dnf
+
+# def mutate_dnf(dnf, all_strategies):
+#     """
+#     Example usage/effect of applying this function:
+    
+#     dnf         = (A and B and C) or (A and D and E) or (B and E and F)
+#     mutated_dnf = mutate_dnf(dnf)
+#     mutated_dnf = (A and B and C) or (F and D and E) or (B and E and F)
+#     """
+
+#     # Split the DNF into a list of conjunctions
+#     conjunctions = dnf.split(" or ")
+    
+#     # Select a random conjunction to mutate
+#     mutation_idx = random.randint(0, len(conjunctions) - 1)
+
+#     mutated_conjunction = conjunctions[mutation_idx]
+    
+#     # Split the conjunction into a list of conditions
+#     conditions = mutated_conjunction.split(" and ")
+    
+#     # Select a random condition to mutate
+#     condition_idx = random.randint(0, len(conditions) - 1)
+#     mutated_condition = conditions[condition_idx]
+    
+#     # Get the current index of the condition in all_bot_signals
+#     current_idx = all_strategies.index(mutated_condition.split("[")[1][1:-5])
+
+#     # Select a new index that is different from the current one
+#     new_idx = random.randint(0, len(all_strategies) - 1)
+#     # while new_idx == current_idx:
+#     while new_idx == current_idx:
+
+#         new_idx = random.randint(0, len(all_strategies) - 1)
+
+#         while all_strategies[current_idx] == all_strategies[new_idx]:
+#             new_idx = random.randint(0, len(all_strategies) - 1)
+    
+#     # Replace the old index with the new one in the mutated condition
+#     mutated_condition = mutated_condition.replace(all_strategies[current_idx], all_strategies[new_idx])
+    
+#     # Replace the old condition with the mutated one in the mutated conjunction
+#     conditions[condition_idx] = mutated_condition
+#     mutated_conjunction = " and ".join(conditions)
+    
+#     # Replace the old conjunction with the mutated one in the original DNF
+#     conjunctions[mutation_idx] = mutated_conjunction
+#     mutated_dnf = " or ".join(conjunctions)
+    
+#     return mutated_dnf
+
+
+# def mutate_dnf(dnf, all_strategies):
+#     """
+#     Example usage/effect of applying this function:
+
+#     dnf         = (A and B and C) or (A and D and E) or (B and E and F)
+#     mutated_dnf = mutate_dnf(dnf)
+#     mutated_dnf = (A and B and C) or (F and D and E) or (B and E and F)
+#     """
+
+#     # Split the DNF into a list of conjunctions
+#     conjunctions = dnf.split(" or ")
+    
+#     # Select a random conjunction to mutate
+#     mutation_idx = random.randint(0, len(conjunctions) - 1)
+
+#     mutated_conjunction = conjunctions[mutation_idx]
+    
+#     # Split the conjunction into a list of conditions
+#     conditions = mutated_conjunction.split(" and ")
+    
+#     # Select a random condition to mutate
+#     condition_idx = random.randint(0, len(conditions) - 1)
+#     mutated_condition = conditions[condition_idx]
+    
+#     # Get the current index of the condition in all_bot_signals
+#     current_idx = all_strategies.index(mutated_condition.split("[")[1][1:-5])
+
+#     # Select a new index that is different from the current one
+#     new_idx = random.randint(0, len(all_strategies) - 1)
+#     # while new_idx == current_idx:
+#     while new_idx == current_idx:
+
+#         new_idx = random.randint(0, len(all_strategies) - 1)
+
+#         while all_strategies[current_idx] == all_strategies[new_idx]:
+#             new_idx = random.randint(0, len(all_strategies) - 1)
+    
+#     # Replace the old index with the new one in the mutated condition
+#     mutated_condition = mutated_condition.replace(all_strategies[current_idx], all_strategies[new_idx])
+    
+#     # Replace the old condition with the mutated one in the mutated conjunction
+#     conditions[condition_idx] = mutated_condition
+#     mutated_conjunction = " and ".join(conditions)
+    
+#     # Replace the old conjunction with the mutated one in the original DNF
+#     conjunctions[mutation_idx] = mutated_conjunction
+#     mutated_dnf = " or ".join(conjunctions)
+    
+#     return mutated_dnf
 
 def plot_trading_simulation(trade_results, bot_type):
     # Create a figure and axis
