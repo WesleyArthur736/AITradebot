@@ -27,8 +27,8 @@ def execute_trades(trade_signals, fee_percentage):
         Ensures the final holdings are in AUD.
         Returns the trading account's final balance in AUD.
     """
-    print(f"\ntrade_signals: {trade_signals}")
-    print(f"type(trade_signals): {type(trade_signals)}\n")
+    # print(f"\ntrade_signals: {trade_signals}")
+    # print(f"type(trade_signals): {type(trade_signals)}\n")
 
     trade_results = trade_signals.copy()
     # trade_results = trade_signals
