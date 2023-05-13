@@ -329,8 +329,8 @@ class EnsembleGeneticAlgorithmOptimizer(object):
             # Evaluate the fitness of each trader agent
             fitness_scores = [self.fitness(trader_agent, trader_agent.trade_signals, self.fee_percentage) for trader_agent in population]
 
-            print(f"\n\nunsorted fitness_scores: {fitness_scores}")
-            print(f"sorted fitness_scores:\n{sorted(fitness_scores, key=lambda i: fitness_scores[i], reverse=True)}\n\n")
+            # print(f"\n\nunsorted fitness_scores: {fitness_scores}")
+            # print(f"sorted fitness_scores:\n{sorted(fitness_scores, reverse=True)}\n\n")
 
             # Select the top-performing trader agents to be the elite members of the next generation
             elite_indices = sorted(range(len(fitness_scores)), key=lambda i: fitness_scores[i], reverse=True)[:n_elite]
@@ -379,12 +379,20 @@ class EnsembleGeneticAlgorithmOptimizer(object):
         # Return the best-performing trader agent
         fitness_scores = [self.fitness(trader_agent, trader_agent.trade_signals, self.fee_percentage) for trader_agent in population]
 
-        print(f"\n\nunsorted fitness_scores: {fitness_scores}")
-        print(f"sorted fitness_scores:\n{sorted(fitness_scores, key=lambda i: fitness_scores[i], reverse=True)}\n\n")
+        # print(f"\n\nunsorted fitness_scores: {fitness_scores}")
+        # print(f"sorted fitness_scores:\n{sorted(fitness_scores, reverse=True)}\n\n")
 
-        best_index = max(range(len(fitness_scores)), key=lambda i: fitness_scores[i])
+        # results = []
 
-        return population[best_index]
+        # for trader_agent, fitness_scores in zip(population, fitness_scores):
+        #     results.append([trader_agent, fitness_scores])
+
+        # best_index = max(my_list, key = lambda x: x[1])
+
+        all_indices = sorted(range(len(fitness_scores)), key=lambda i: fitness_scores[i], reverse=True)
+        population = [population[i] for i in all_indices]
+
+        return population[0]
 
 
 if __name__ == "__main__":
@@ -395,9 +403,9 @@ if __name__ == "__main__":
 
     fee_percentage = 0.02
 
-    population_size = 10
+    population_size = 100
     mutation_rate = 0.01
-    num_generations = 1
+    num_generations = 10
 
     window = 50
     num_standard_deviations = 1.5
