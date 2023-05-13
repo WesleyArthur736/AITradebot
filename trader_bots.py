@@ -574,7 +574,7 @@ class ensemble_bot(Bot):
         self.number_of_disjuncts = number_of_disjuncts
         self.number_of_conjuncts = number_of_conjuncts
 
-        self.params = [self.number_of_disjuncts, self.strategies_to_use, self.buy_dnf, self.sell_dnf]
+        self.params = [self.number_of_disjuncts, self.strategies_to_use, self.buy_dnf, self.sell_dnf, self.number_of_conjuncts]
 
     def generate_signals(self):
         # Creates a copy of the DataFrame to avoid modifying the original.

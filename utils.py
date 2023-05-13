@@ -145,7 +145,7 @@ def mutate_dnf(dnf, is_buy_dnf, all_strategies, num_disjuncts_mutate = 0):
     mutated_dnf   = mutate_dnf(dnf, all_strategies)
     mutated_dnf   = (A and B and C) or (F and D and E) or (B and E and F)
 
-    mutated_dnf_2 = mutate_dnf(dnf, all_strategies, num_disjuncts_mutate = 2)
+    mutated_dnf_2 = mutate_dnf(dnf, all_strategies, num_disjuncts_mutate = 3)
     mutated_dnf_2 = (A and B and C) or (F and D and E) or (B and E and F) or H or (A and G and H) or (I and J and K)
     """
 

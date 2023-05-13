@@ -188,20 +188,23 @@ class EnsembleGeneticAlgorithmOptimizer(object):
 
         child_params = []
 
+        # parent1.params = [parent1.number_of_disjuncts, parent1.strategies_to_use, parent1.buy_dnf, parent1.sell_dnf, parent1.number_of_conjuncts]
+        # parent2.params = [parent2.number_of_disjuncts, parent2.strategies_to_use, parent2.buy_dnf, parent2.sell_dnf, parent2.number_of_conjuncts]
         for p_1_param, p_2_param in zip(parent1.params, parent2.params):
             if random.random() < 0.5:
                 child_params.append(p_1_param)
             else:
                 child_params.append(p_2_param)
 
-        # ensemble_bot.params = [self.number_of_disjuncts, self.strategies_to_use, self.buy_dnf, self.sell_dnf]
         child_bot = type(self.trader_agent)(
-            self.trader_agent.ohlcv_df,
-            child_params[2],
-            child_params[3],
-            child_params[1],
-            self.trader_agent.constituent_bot_parameters,
-            child_params[0]
+            ohlcv_df = self.trader_agent.ohlcv_df,
+            buy_dnf = child_params[2],
+            sell_dnf = child_params[3],
+            strategies_to_use = child_params[1],
+            constituent_bot_parameters = self.trader_agent.constituent_bot_parameters,
+            number_of_disjuncts = child_params[0],
+            all_strategies = self.trader_agent.all_strategies,
+            number_of_conjuncts = child_params[4]
         )
 
         return child_bot
@@ -460,8 +463,6 @@ if __name__ == "__main__":
         all_strategies = all_strategies,
         number_of_conjuncts = init_number_of_conjuncts
     )
-
-    # construct_dnf
 
     # generate the trading signals with the bot's technical indicator:
     trade_signals, buy_dnf, sell_dnf = ensb_bot.generate_signals()
