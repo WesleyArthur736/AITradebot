@@ -214,17 +214,28 @@ if __name__ == "__main__":
     Ob_th= np.random.randint(51,90)
     
     vwap_win = np.random.randint(10,30)
+   
+    StOsc_sm = np.random.randint(1,6)
+    StOsc_win =np.random.randint(7,30)
+    StOsc_Os = np.random.randint(1,49)
+    StOsc_Ob = np.random.randint(50,99)
     
+    psar_step = np.random.uniform(0.001, 0.03)
+    psar_mstep = np.random.uniform(psar_step + 0.01,0.3)
+    
+    ROC_win = np.random.randint(5,20)
+    ROC_bth = np.random.randint(1,20)
+    ROC_sth = np.random.randint(-20,-1)
     
     MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': MACD_sigp, 'fast_window': MACD_low, 'signal_window': MACD_high}
     Bollinger_Bands_parameters = {'bot_name': 'bollinger_bands_bot', 'window': BB_win, 'num_standard_deviations': BBstd}
     RSI_parameters = {'bot_name': 'RSI_bot', 'overbought_threshold': Ob_th, 'oversold_threshold': Os_th, 'window': RSI_win}
     VWAP_parameters = {'bot_name': 'VWAP_bot', 'window': vwap_win}
-    Stochastic_Oscillator_parameters = {'bot_name': 'stochastic_oscillator_bot', 'oscillator_window': 14, 'signal_window': 3, 'overbought_threshold': 80, 'oversold_threshold': 20}
-    SAR_parameters = {'bot_name': 'SAR_bot', 'step': 0.02, 'max_step': 0.2}
+    Stochastic_Oscillator_parameters = {'bot_name': 'stochastic_oscillator_bot', 'oscillator_window': StOsc_sm, 'signal_window': StOsc_win, 'overbought_threshold': StOsc_Ob, 'oversold_threshold': StOsc_Ob}
+    SAR_parameters = {'bot_name': 'SAR_bot', 'step': psar_step, 'max_step': psar_mstep}
     OBV_trend_following_parameters = {'bot_name': 'OBV_trend_following_bot'}
     OBV_trend_reversal_parameters = {'bot_name': 'OBV_trend_reversal_bot'}
-    ROC_parameters = {'bot_name': 'ROC_bot', 'window': 12, 'buy_threshold': 5, 'sell_threshold': -5}
+    ROC_parameters = {'bot_name': 'ROC_bot', 'window': ROC_win, 'buy_threshold': ROC_bth, 'sell_threshold': ROC_sth}
 
     all_parameters = [
         MACD_parameters, 
