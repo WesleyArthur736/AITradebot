@@ -9,9 +9,8 @@ import random
 ###############################################################################
 
 ### GA parameters
-def ensemble_ga(constituent_bot_parameters, population_size=100, number_of_generations=20):
+def ensemble_ga(constituent_bot_parameters, population_size=100, number_of_generations=20, mutation_rate=0.5):
     injected_population_size = 20
-    mutation_rate = 0.5
 
     ### Constituent bot parameters
 
@@ -125,8 +124,13 @@ def ensemble_ga(constituent_bot_parameters, population_size=100, number_of_gener
 
         for crossover in range(0, len(population_with_info)):
             # Select two parents from the population randomly.
-            parent1 = population_with_info[random.randint(0, len(population_with_info) - 1)]
-            parent2 = population_with_info[random.randint(0, len(population_with_info) - 1)]
+            parent1_idx = random.randint(0, len(population_with_info) - 1)
+            parent2_idx = random.randint(0, len(population_with_info) - 1)
+            while parent2_idx == parent1_idx:
+                parent2_idx = random.randint(0, len(population_with_info) - 1)
+
+            parent1 = population_with_info[parent1_idx]
+            parent2 = population_with_info[parent2_idx]
 
             # print(f"parent1: \n{parent1[1]} \n{parent1[2]}\n")
             # print(f"parent2: \n{parent2[1]} \n{parent2[2]}\n")
