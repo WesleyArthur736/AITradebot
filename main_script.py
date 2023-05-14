@@ -396,7 +396,7 @@ def run_Awesome_Oscillator_ga_optimized():
 
     return best_trade_results, best_trader
 
-def plot_all_optimized_trade_results(
+def plot_all_constituent_bots_trade_results(
     macd_results,
     bollinger_bands_results,
     rsi_results,
@@ -435,9 +435,26 @@ def plot_all_optimized_trade_results(
 
 
 # Ensemble Agent Run on Non-GA Optimised Constituent Agents:
-def run_ensemble_bots_non_optimal_and_optimal(Non_Optimized_constituent_bot_parameters, Optimized_constituent_bot_parameters):
-    best_ensemble_bot_non_optimised = erwin_ensemble_ga.ensemble_ga(constituent_bot_parameters=Non_Optimized_constituent_bot_parameters, population_size=100, number_of_generations=20, mutation_rate=0.5)
-    best_ensemble_bot_optimised = erwin_ensemble_ga.ensemble_ga(constituent_bot_parameters=Optimized_constituent_bot_parameters, population_size=100, number_of_generations=20, mutation_rate=0.5)
+def run_ensemble_bots_non_optimal_and_optimal(
+    Non_Optimized_constituent_bot_parameters, 
+    Optimized_constituent_bot_parameters, 
+    population_size,
+    number_of_generations,
+    mutation_rate
+):
+    best_ensemble_bot_non_optimised = erwin_ensemble_ga.ensemble_ga(
+        constituent_bot_parameters = Non_Optimized_constituent_bot_parameters, 
+        population_size = population_size, 
+        number_of_generations = number_of_generations, 
+        mutation_rate = mutation_rate
+    )
+
+    best_ensemble_bot_optimised = erwin_ensemble_ga.ensemble_ga(
+        constituent_bot_parameters = Optimized_constituent_bot_parameters, 
+        population_size = population_size, 
+        number_of_generations = number_of_generations, 
+        mutation_rate = mutation_rate
+    )
     return best_ensemble_bot_non_optimised, best_ensemble_bot_optimised
 
 if __name__ == "__main__":
@@ -448,9 +465,10 @@ if __name__ == "__main__":
 
     fee_percentage = 0.02
 
-    population_size = 5
+    population_size = 10
     mutation_rate = 0.01
-    num_generations = 2
+    num_generations = 10
+    mutation_rate_ensemble = 0.5
 
     n_elite = 2
     init_number_of_disjuncts = 5
@@ -474,21 +492,7 @@ if __name__ == "__main__":
     fast_window = 12
     signal_window = 9
 
-    ### CONSTITUENT BOTS ###
-
-    # run_macd_non_optimized()
-    # run_bollinger_bands_non_optimized()
-
-    ### GA OPTIMISED CONSTITUENT BOTS ###
-    # run_macd_ga_optimized()
-    # run_bollinger_bands_ga_optimized()
-    # run_RSI_ga_optimized()
-    # run_VWAP_ga_optimized()
-    # run_stochastic_oscillator_ga_optimized()
-    # run_SAR_ga_optimized()
-    # run_ROC_ga_optimized()
-    # run_Awesome_Oscillator_ga_optimized()
-
+    # generate the optimal parameters of the constituent agents:
     macd_results, best_MACD_trader = run_macd_ga_optimized()
     bollinger_bands_results, best_Bol_Band_trader = run_bollinger_bands_ga_optimized()
     rsi_results, best_RSI_trader = run_RSI_ga_optimized()
@@ -503,7 +507,8 @@ if __name__ == "__main__":
     # ensemble_results = run_ensemble_non_optimal_constituents()
     buy_hold_results = run_buy_hold_strategy()
 
-    plot_all_optimized_trade_results(
+    # plot the performance of the optimised constituent bots
+    plot_all_constituent_bots_trade_results(
         macd_results,
         bollinger_bands_results,
         rsi_results,
@@ -515,7 +520,7 @@ if __name__ == "__main__":
         roc_results,
         awesome_results,
         buy_hold_results,
-        "Trade Results for Optimized Constituent Bots"
+        "Trade Results for Optimised Constituent Bots"
     )
 
     ######## Best MACD params:
@@ -609,24 +614,33 @@ if __name__ == "__main__":
         Optimized_Awesome_Osillator
     ]
 
-    run = 1
+    # run = 1
+    # with open("Optimized_constituent_bot_parameters_{run}.txt", "w") as f:
+    #     for item in Optimized_constituent_bot_parameters:
+    #         f.write(str(item) + "\n")
+    # f.close()
 
-    with open("Optimized_constituent_bot_parameters_{run}.txt", "w") as f:
-        for item in Optimized_constituent_bot_parameters:
-            f.write(str(item) + "\n")
+    # Non_Optimized_MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': 26, 'fast_window': 12, 'signal_window': 9}
+    # Non_Optimized_Bollinger_Bands_parameters = {'bot_name': 'bollinger_bands_bot', 'window': 20, 'num_standard_deviations': 2.5}
+    # Non_Optimized_RSI_parameters = {'bot_name': 'RSI_bot', 'overbought_threshold': 70, 'oversold_threshold': 30, 'window': 14}
+    # Non_Optimized_VWAP_parameters = {'bot_name': 'VWAP_bot', 'window': 20}
+    # Non_Optimized_Stochastic_Oscillator_parameters = {'bot_name': 'stochastic_oscillator_bot', 'oscillator_window': 14, 'signal_window': 3, 'overbought_threshold': 80, 'oversold_threshold': 20}
+    # Non_Optimized_SAR_parameters = {'bot_name': 'SAR_bot', 'step': 0.02, 'max_step': 0.2}
+    # Non_Optimized_OBV_trend_following_parameters = {'bot_name': 'OBV_trend_following_bot'}
+    # Non_Optimized_OBV_trend_reversal_parameters = {'bot_name': 'OBV_trend_reversal_bot'}
+    # Non_Optimized_ROC_parameters = {'bot_name': 'ROC_bot', 'window': 12, 'buy_threshold': 5, 'sell_threshold': -5}
+    # Non_Optimized_Awesome_Osillator = {'bot_name': 'Awesome_Oscillator_Bot', 'window1': 5 , 'window2': 34}
 
-    f.close()
-
-    Non_Optimized_MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': 26, 'fast_window': 12, 'signal_window': 9}
-    Non_Optimized_Bollinger_Bands_parameters = {'bot_name': 'bollinger_bands_bot', 'window': 20, 'num_standard_deviations': 2.5}
-    Non_Optimized_RSI_parameters = {'bot_name': 'RSI_bot', 'overbought_threshold': 70, 'oversold_threshold': 30, 'window': 14}
-    Non_Optimized_VWAP_parameters = {'bot_name': 'VWAP_bot', 'window': 20}
-    Non_Optimized_Stochastic_Oscillator_parameters = {'bot_name': 'stochastic_oscillator_bot', 'oscillator_window': 14, 'signal_window': 3, 'overbought_threshold': 80, 'oversold_threshold': 20}
-    Non_Optimized_SAR_parameters = {'bot_name': 'SAR_bot', 'step': 0.02, 'max_step': 0.2}
+    Non_Optimized_MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': 6, 'fast_window': 5, 'signal_window': 15}
+    Non_Optimized_Bollinger_Bands_parameters = {'bot_name': 'bollinger_bands_bot', 'window': 4, 'num_standard_deviations': 1.64}
+    Non_Optimized_RSI_parameters = {'bot_name': 'RSI_bot', 'overbought_threshold': 48, 'oversold_threshold': 31, 'window': 30}
+    Non_Optimized_VWAP_parameters = {'bot_name': 'VWAP_bot', 'window': 6}
+    Non_Optimized_Stochastic_Oscillator_parameters = {'bot_name': 'stochastic_oscillator_bot', 'oscillator_window': 81, 'signal_window': 60, 'overbought_threshold': 6, 'oversold_threshold': 27}
+    Non_Optimized_SAR_parameters = {'bot_name': 'SAR_bot', 'step': 80, 'max_step': 41}
     Non_Optimized_OBV_trend_following_parameters = {'bot_name': 'OBV_trend_following_bot'}
     Non_Optimized_OBV_trend_reversal_parameters = {'bot_name': 'OBV_trend_reversal_bot'}
-    Non_Optimized_ROC_parameters = {'bot_name': 'ROC_bot', 'window': 12, 'buy_threshold': 5, 'sell_threshold': -5}
-    Non_Optimized_Awesome_Osillator = {'bot_name': 'Awesome_Oscillator_Bot', 'window1': 5 , 'window2': 34}
+    Non_Optimized_ROC_parameters = {'bot_name': 'ROC_bot', 'window': 95, 'buy_threshold': 58, 'sell_threshold': 61}
+    Non_Optimized_Awesome_Osillator = {'bot_name': 'Awesome_Oscillator_Bot', 'window1': 88, 'window2': 98}
 
     Non_Optimized_constituent_bot_parameters = [ 
         Non_Optimized_Bollinger_Bands_parameters, 
@@ -641,8 +655,61 @@ if __name__ == "__main__":
         Non_Optimized_Awesome_Osillator
     ]
 
+    # # generate the optimal parameters of the constituent agents:
+    # macd_results, best_MACD_trader = run_macd_non_optimized()
+    # bollinger_bands_results, best_Bol_Band_trader = run_bollinger_bands_ga_optimized()
+    # rsi_results, best_RSI_trader = run_RSI_ga_optimized()
+    # vwap_results, best_VWAP_trader = run_VWAP_ga_optimized()
+    # stochastic_results, best_Stoch_Osc_trader = run_stochastic_oscillator_ga_optimized()
+    # sar_results, best_SAR_trader = run_SAR_ga_optimized()
+    # # obv_following_results = obv_following_results()
+    # # obv_reversal_results = obv_reversal_results()
+    # roc_results, best_ROC_trader = run_ROC_ga_optimized()
+    # awesome_results, best_Awe_Osc_trader = run_Awesome_Oscillator_ga_optimized()
+
+    # ensemble_results = run_ensemble_non_optimal_constituents()
+    buy_hold_results = run_buy_hold_strategy()
+
+    # plot the performance of the non-optimised constituent bots
+    plot_all_constituent_bots_trade_results(
+        macd_results,
+        bollinger_bands_results,
+        rsi_results,
+        vwap_results,
+        stochastic_results,
+        sar_results,
+        # obv_following_results,
+        # obv_reversal_results,
+        roc_results,
+        awesome_results,
+        buy_hold_results,
+        "Trade Results for Optimised Constituent Bots"
+    )
+
     ### ENSEMBLE BOTS ###
-    run_ensemble_bots_non_optimal_and_optimal(Non_Optimized_constituent_bot_parameters, Optimized_constituent_bot_parameters)
+    best_ensemble_bot_non_optimised, best_ensemble_bot_optimised = run_ensemble_bots_non_optimal_and_optimal(
+        Non_Optimized_constituent_bot_parameters = Non_Optimized_constituent_bot_parameters, 
+        Optimized_constituent_bot_parameters = Optimized_constituent_bot_parameters,
+        population_size = population_size,
+        number_of_generations = 10,
+        mutation_rate = mutation_rate_ensemble
+    )
+
+    # Plot the best ensemble bot from the last generation
+    utils.plot_trading_simulation(
+        [best_ensemble_bot_non_optimised[3]], 
+        ["Ensemble Bot"], 
+        # f"Best Ensemble Bot After {number_of_generations} Generations (Population = {population_size})" 
+        f"Best Ensemble Bot After {num_generations} Generations (Population = {population_size})" 
+    )
+
+    # Plot the best ensemble bot from the last generation
+    utils.plot_trading_simulation(
+        [best_ensemble_bot_optimised[3]], 
+        ["Ensemble Bot"], 
+        # f"Best Ensemble Bot After {number_of_generations} Generations (Population = {population_size})"
+        f"Best Ensemble Bot After {num_generations} Generations (Population = {population_size})"
+    )
 
    
 

@@ -171,13 +171,14 @@ class EnsembleGeneticAlgorithmOptimizer(object):
     #         number_of_disjuncts, number_of_conjuncts, all_strategies
     #     ):
     def __init__(
-            self, ohlcv_df, fee_percentage,
+            self, ohlcv_df, fee_percentage, 
             population_size, mutation_rate, num_generations, 
             number_of_disjuncts, number_of_conjuncts, all_strategies
         ):
         # self.trader_agent_params = trader_agent.params
 
         self.fee_percentage = fee_percentage
+        self.bot_type = trader_agent.bot_type
 
         self.population_size = population_size
         self.mutation_rate = mutation_rate
@@ -241,7 +242,109 @@ class EnsembleGeneticAlgorithmOptimizer(object):
         return trader_agent
 
     def run_genetic_algorithm_ensemble(self, population, n_elite, tournament_size, num_disjuncts_mutate, all_strategies):
-        return None
+
+        # create a list of "trader_bot.ensemble_bot"'s, with randomly initialised parameter values
+        # this is the population of solutions.
+        # population = [
+        #     type(self.trader_agent)(
+        #         ohlcv_df = self.trader_agent.ohlcv_df,
+        #         buy_dnf = utils.construct_dnf(
+        #             trade_type = "buy", 
+        #             number_of_disjuncts = random.randint(2, 5), 
+        #             strategies_to_use = init_strategies_to_use,
+        #             all_strategies = all_strategies,
+        #             number_of_conjuncts = random.randint(1, 3)
+        #         ),
+        #         sell_dnf = utils.construct_dnf(
+        #             trade_type = "sell", 
+        #             number_of_disjuncts = random.randint(2, 5), 
+        #             strategies_to_use = init_strategies_to_use,
+        #             all_strategies = all_strategies,
+        #             number_of_conjuncts = random.randint(1, 3)
+        #         ),
+        #         strategies_to_use = utils.select_initial_strats(all_strategies, number_of_conjuncts = random.randint(1, 3)),
+        #         constituent_bot_parameters = self.trader_agent.constituent_bot_parameters,
+        #         number_of_disjuncts = random.randint(2, 5),
+        #         all_strategies = all_strategies,
+        #         number_of_conjuncts = random.randint(1, 3)
+        #     ) for i in range(self.population_size)
+        # ]
+
+        for i in range(self.num_generations):
+
+            print(f"\ngeneration: {i}")
+
+            # Evaluate the fitness of each trader agent
+            fitness_scores = [self.fitness(trader_agent, trader_agent.generate_signals(), self.fee_percentage) for trader_agent in population]
+
+            for ensb_bot in population:
+                # print(f"\nensb_bot.buy_dnf:\n{ensb_bot.buy_dnf}\n")
+                # print(f"ensb_bot.sell_dnf:\n{ensb_bot.sell_dnf}\n")
+                print(f"\nfitness_scores_1: {fitness_scores}\n")
+
+            # Select the top-performing trader agents to be the elite members of the next generation
+            elite_indices = sorted(range(len(fitness_scores)), key=lambda i: fitness_scores[i], reverse=True)[:n_elite]
+            elite_population = [population[i] for i in elite_indices]
+
+            # Randomly select the rest of the parents for the next generation using tournament selection
+            num_parents = self.population_size - n_elite
+            parents = []
+            for j in range(num_parents):
+                # Select a random subset of the population to compete in the tournament
+
+                # print(f"\nrandom.sample(list(range(len(population))), tournament_size): {random.sample(list(range(len(population))), tournament_size)}")
+                # print(f"tournament_size: {tournament_size}\n")
+
+                tournament_indices = random.sample(range(len(population)), tournament_size)
+                tournament = [population[i] for i in tournament_indices]
+
+                # Choose the best individual from the tournament as a parent
+                tournament_fitness = [fitness_scores[i] for i in tournament_indices]
+                best_index = max(range(len(tournament_fitness)), key=lambda i: tournament_fitness[i])
+                best_parent = tournament[best_index]
+
+                parents.append(best_parent)
+
+            # Create a new population by crossing over and mutating the parents
+            new_population = []
+            for i in range(self.population_size):
+                if i < n_elite:
+                    # Preserve elite members for the next generation
+                    new_population.append(elite_population[i])
+                else:
+                    # Select two random parents for uniform crossover
+                    parent1_index, parent2_index = random.sample(range(len(parents)), 2)
+                    parent1 = parents[parent1_index]
+                    parent2 = parents[parent2_index]
+
+                    # Perform uniform crossover to create a new child bot
+                    child_bot = self.ensemble_uniform_crossover(parent1, parent2)
+
+                    # Mutate the child bot with a certain probability
+                    child_bot = self.ensemble_mutate(child_bot, self.mutation_rate, num_disjuncts_mutate, all_strategies)
+
+                    # Add the child bot to the new population
+                    new_population.append(child_bot)
+
+
+            # Replace the old population with the new one
+            population = new_population
+
+        # Return the best-performing trader agent
+        fitness_scores = [self.fitness(trader_agent, trader_agent.generate_signals(), self.fee_percentage) for trader_agent in population]
+
+        for ensb_bot in population:
+            # print(f"\nensb_bot.buy_dnf:\n{ensb_bot.buy_dnf}\n")
+            # print(f"ensb_bot.sell_dnf:\n{ensb_bot.sell_dnf}\n")
+            print(f"\nfitness_scores_1: {fitness_scores}\n")
+
+        # all_indices = sorted(range(len(fitness_scores)), key=lambda i: fitness_scores[i], reverse=True)
+        # population = [population[i] for i in all_indices]
+        # return population[0]
+
+        best_index = max(range(len(fitness_scores)), key=lambda i: fitness_scores[i])
+
+        return population[best_index]
 
 
     def brute_force_search_ensemble(self, population):

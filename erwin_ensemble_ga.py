@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 import random
 
 
-def crossover(ohlcv_df_train, fee_percentage, all_bot_signals, all_bot_names, population_with_info, tournament_selection_pool_size = 10):
+def crossover(ohlcv_df, fee_percentage, all_bot_signals, all_bot_names, population_with_info, tournament_selection_pool_size = 10):
 
     min_terms_in_conjunction = 1
     max_terms_in_conjunction = 4
@@ -36,7 +36,7 @@ def crossover(ohlcv_df_train, fee_percentage, all_bot_signals, all_bot_names, po
 
         # instantiate a child bot 
         child_ensemble_bot = trader_bots.ensemble_bot(
-            ohlcv_df = ohlcv_df_train,
+            ohlcv_df = ohlcv_df,
             all_bot_signals = all_bot_signals,
             all_bot_names = all_bot_names,
             min_terms_in_conjunction = min_terms_in_conjunction,
@@ -77,15 +77,15 @@ def ensemble_ga(constituent_bot_parameters, population_size = 100, number_of_gen
 
     # Get the ohclv data with the reevant helper function
     ohlcv_df = utils.get_daily_ohlcv_data()
-    ohlcv_df_train, ohlcv_df_test = train_test_split(ohlcv_df, test_size=test_size, shuffle=False) # don't do this !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # ohlcv_df, ohlcv_df_test = train_test_split(ohlcv_df, test_size=test_size, shuffle=False) # don't do this !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     # Determine constituent bot signals for training data
-    all_bot_signals, all_bot_names = utils.initialise_bots(ohlcv_df_train, constituent_bot_parameters)
+    all_bot_signals, all_bot_names = utils.initialise_bots(ohlcv_df, constituent_bot_parameters)
 
     # Initialise ensemble bot population with training data
     population = [
         trader_bots.ensemble_bot(
-        ohlcv_df=ohlcv_df_train,
+        ohlcv_df=ohlcv_df,
         all_bot_signals=all_bot_signals,
         all_bot_names=all_bot_names,
         min_terms_in_conjunction=min_terms_in_conjunction,
@@ -108,7 +108,7 @@ def ensemble_ga(constituent_bot_parameters, population_size = 100, number_of_gen
     for generation in range(1, number_of_generations + 1):
 
         # crossover 
-        offspring_with_info = crossover(ohlcv_df_train, fee_percentage, all_bot_signals, all_bot_names, population_with_info)
+        offspring_with_info = crossover(ohlcv_df, fee_percentage, all_bot_signals, all_bot_names, population_with_info)
 
         ### Perform random mutation of a conjunction for offspring
         for index in range(0, len(offspring_with_info) - 1):
@@ -127,7 +127,7 @@ def ensemble_ga(constituent_bot_parameters, population_size = 100, number_of_gen
 
                 # Instantiate the mutated version of the offspring bot
                 mutated_ensemble_bot = trader_bots.ensemble_bot(
-                    ohlcv_df = ohlcv_df_train,
+                    ohlcv_df = ohlcv_df,
                     all_bot_signals = all_bot_signals,
                     all_bot_names = all_bot_names,
                     min_terms_in_conjunction = min_terms_in_conjunction,
@@ -148,7 +148,7 @@ def ensemble_ga(constituent_bot_parameters, population_size = 100, number_of_gen
         # Inject 'injected_population_size' random immigrants
         injected_population = [
             trader_bots.ensemble_bot(
-                ohlcv_df = ohlcv_df_train,
+                ohlcv_df = ohlcv_df,
                 all_bot_signals = all_bot_signals,
                 all_bot_names = all_bot_names,
                 min_terms_in_conjunction = min_terms_in_conjunction,
@@ -179,11 +179,12 @@ def ensemble_ga(constituent_bot_parameters, population_size = 100, number_of_gen
         print(f"Best ensemble bot's sell_dnf: \n{population_with_info[0][2]}\n")
         print(f"Best ensemble bot's final_balance: {population_with_info[0][4]}\n")
 
-    # Plot the best ensemble bot from the last generation
-    utils.plot_trading_simulation(
-        [population_with_info[0][3]], 
-        ["Ensemble Bot"], 
-        f"Best Ensemble Bot After {number_of_generations} Generations (Population = {population_size})"
-    )
+    # # Plot the best ensemble bot from the last generation
+    # utils.plot_trading_simulation(
+    #     [population_with_info[0][3]], 
+    #     ["Ensemble Bot"], 
+    #     f"Best Ensemble Bot After {number_of_generations} Generations (Population = {population_size})"
+    # )
 
-    return population_with_info[0][3]
+    # return population_with_info[0][3]
+    return population_with_info[0]
