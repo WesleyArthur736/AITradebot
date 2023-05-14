@@ -26,6 +26,51 @@ class Bot(object):
         raise NotImplementedError("Subclass must implement generate_signals method.")
 
 
+class buy_hold_bot(Bot):
+    def __init__(self, ohlcv_df):
+        super().__init__(ohlcv_df)
+        self.bot_type = "Buy-Hold"
+
+    def generate_signals(self):
+        """ Computes the Bollinger band values using the daily close prices.
+            Identifies the buy/sell signals (price exiting the bands).
+            Returns a DataFrame with all the required data for executing the trades.
+        """
+        # Creates a copy of the DataFrame to avoid modifying the original.
+        trade_signals = self.ohlcv_df.copy()
+
+        # Initialises output columns.
+        trade_signals["buy_signal"] = False  # Initialises output column for the buy signals.
+        trade_signals["sell_signal"] = False  # Initialises output column for the sell signals.
+
+        trade_signals.at[0, "buy_signal"] = True
+
+        return trade_signals
+
+
+
+class buy_hold_bot(Bot):
+    def __init__(self, ohlcv_df):
+        super().__init__(ohlcv_df)
+        self.bot_type = "Buy-Hold"
+
+    def generate_signals(self):
+        """ Computes the Bollinger band values using the daily close prices.
+            Identifies the buy/sell signals (price exiting the bands).
+            Returns a DataFrame with all the required data for executing the trades.
+        """
+        # Creates a copy of the DataFrame to avoid modifying the original.
+        trade_signals = self.ohlcv_df.copy()
+
+        # Initialises output columns.
+        trade_signals["buy_signal"] = False  # Initialises output column for the buy signals.
+        trade_signals["sell_signal"] = False  # Initialises output column for the sell signals.
+
+        trade_signals.at[0, "buy_signal"] = True
+
+        return trade_signals
+
+
 class MACD_bot(Bot):
 
     def __init__(self, ohlcv_df, slow_window, fast_window, signal_window):

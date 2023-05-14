@@ -18,6 +18,25 @@ from sklearn.model_selection import train_test_split, KFold
 import ga_trader_general as ga
 
 
+# Base buy-hold strategy
+def run_buy_hold_strategy():
+    trader_agent = trader_bots.buy_hold_bot(
+        ohlcv_df = ohlcv_df_train,
+    )
+
+    trade_signals = trader_agent.generate_signals()
+
+    # un-optimized bot
+    final_balance, trade_results = utils.execute_trades(
+        trade_signals = trade_signals,
+        fee_percentage = 0.0
+    )
+
+    print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
+    # utils.plot_trading_simulation(trade_results, "Non Optimized Bollinger Bands", color = "blue")
+
+    return trade_results
+
 
 
 # Non-GA Optimised Constituent agents:
@@ -377,21 +396,20 @@ def run_Awesome_Oscillator_ga_optimized():
     return best_trade_results, best_trader
 
 def plot_all_optimized_trade_results(
-        macd_results,
-        bollinger_bands_results,
-        rsi_results,
-        vwap_results,
-        stochastic_results,
-        sar_results,
-        # obv_following_results,
-        # obv_reversal_results,
-        roc_results,
-        awesome_results,
-        title
-        ):
-
-    plt.plot(macd_results.index, macd_results["portfolio_value"],
-             label=f"MACD: {round(macd_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
+    macd_results,
+    bollinger_bands_results,
+    rsi_results,
+    vwap_results,
+    stochastic_results,
+    sar_results,
+    # obv_following_results,
+    # obv_reversal_results,
+    roc_results,
+    awesome_results,
+    buy_hold_results,
+    title
+    ):
+    plt.plot(macd_results.index, macd_results["portfolio_value"], label="MACD", alpha=0.8)
     plt.plot(bollinger_bands_results.index,
              bollinger_bands_results["portfolio_value"], label=f"Bollinger Bands: {round(bollinger_bands_results['portfolio_value'].iloc[-1], 2)}", alpha=0.8)
     plt.plot(rsi_results.index, rsi_results["portfolio_value"],
@@ -404,8 +422,9 @@ def plot_all_optimized_trade_results(
              label=f"SAR {round(sar_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
     plt.plot(roc_results.index, roc_results["portfolio_value"],
              label=f"ROC {round(roc_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
-    plt.plot(awesome_results.index,
-             awesome_results["portfolio_value"], label=f"Awesome Oscillator {round(awesome_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
+    plt.plot(awesome_results.index, awesome_results["portfolio_value"], label=f"Awesome Oscillator {round(awesome_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
+    plt.plot(buy_hold_results.index, buy_hold_results["portfolio_value"], label="Buy-Hold Strategy", alpha=0.8)
+
 
     plt.xlabel('Day')
     plt.ylabel('Portfolio')
@@ -604,6 +623,9 @@ if __name__ == "__main__":
     roc_results, best_ROC_trader = run_ROC_ga_optimized()
     awesome_results, best_Awe_Osc_trader = run_Awesome_Oscillator_ga_optimized()
 
+    # ensemble_results = run_ensemble_non_optimal_constituents()
+    buy_hold_results = run_buy_hold_strategy()
+
     plot_all_optimized_trade_results(
         macd_results,
         bollinger_bands_results,
@@ -615,6 +637,7 @@ if __name__ == "__main__":
         # obv_reversal_results,
         roc_results,
         awesome_results,
+        buy_hold_results,
         "Trade Results for Optimized Constituent Bots"
     )
 
