@@ -435,7 +435,7 @@ def plot_all_optimized_trade_results(
 
 
 # Ensemble Agent Run on Non-GA Optimised Constituent Agents:
-def run_ensemble_bot_kinds(Non_Optimized_constituent_bot_parameters, Optimized_constituent_bot_parameters):
+def run_ensemble_bots_non_optimal_and_optimal(Non_Optimized_constituent_bot_parameters, Optimized_constituent_bot_parameters):
 
     # MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': 26, 'fast_window': 12, 'signal_window': 9}
     # Bollinger_Bands_parameters = {'bot_name': 'bollinger_bands_bot', 'window': 20, 'num_standard_deviations': 2.5}
@@ -497,7 +497,7 @@ def run_ensemble_bot_kinds(Non_Optimized_constituent_bot_parameters, Optimized_c
         buy_dnf = init_buy_dnf,
         sell_dnf = init_sell_dnf,
         strategies_to_use = init_strategies_to_use,
-        constituent_bot_parameters = constituent_bot_parameters,
+        constituent_bot_parameters = Non_Optimized_constituent_bot_parameters,
         number_of_disjuncts = init_number_of_disjuncts,
         all_strategies = all_strategies,
         number_of_conjuncts = init_number_of_conjuncts
@@ -531,7 +531,7 @@ def run_ensemble_bot_kinds(Non_Optimized_constituent_bot_parameters, Optimized_c
                 number_of_conjuncts = random.randint(1, 2)
             ),
             strategies_to_use = utils.select_initial_strats(all_strategies, number_of_conjuncts = random.randint(1, 2)),
-            constituent_bot_parameters = constituent_bot_parameters,
+            constituent_bot_parameters = Non_Optimized_constituent_bot_parameters,
             number_of_disjuncts = random.randint(2, 5),
             all_strategies = all_strategies,
             number_of_conjuncts = random.randint(1, 2)
@@ -765,7 +765,7 @@ if __name__ == "__main__":
     ]
 
     ### ENSEMBLE BOTS ###
-    run_ensemble_bot_kinds(Non_Optimized_constituent_bot_parameters, Optimized_constituent_bot_parameters)
+    run_ensemble_bots_non_optimal_and_optimal(Non_Optimized_constituent_bot_parameters, Optimized_constituent_bot_parameters)
 
    
 
