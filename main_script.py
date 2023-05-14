@@ -513,55 +513,79 @@ def run_ensemble_bots_non_optimal_and_optimal(Non_Optimized_constituent_bot_para
 
     utils.plot_trading_simulation(trade_results, "Random Ensemble", color = "blue")
 
-    population = [
-        trader_bots.ensemble_bot(
-            ohlcv_df = ohlcv_df_train,
-            buy_dnf = utils.construct_dnf(
-                trade_type = "buy", 
-                number_of_disjuncts = random.randint(2, 10), 
-                strategies_to_use = init_strategies_to_use,
-                all_strategies = all_strategies,
-                number_of_conjuncts = random.randint(1, 2)
-            ),
-            sell_dnf = utils.construct_dnf(
-                trade_type = "sell", 
-                number_of_disjuncts = random.randint(2, 10), 
-                strategies_to_use = init_strategies_to_use,
-                all_strategies = all_strategies,
-                number_of_conjuncts = random.randint(1, 2)
-            ),
-            strategies_to_use = utils.select_initial_strats(all_strategies, number_of_conjuncts = random.randint(1, 2)),
-            constituent_bot_parameters = Non_Optimized_constituent_bot_parameters,
-            number_of_disjuncts = random.randint(2, 5),
-            all_strategies = all_strategies,
-            number_of_conjuncts = random.randint(1, 2)
-        ) for i in range(population_size)
-    ]
 
-    ga_optimiser = ga.EnsembleGeneticAlgorithmOptimizer(
+    #######################################
+
+    trader_agent_optimized_constituents = trader_bots.ensemble_bot(
         ohlcv_df = ohlcv_df_train,
-        # trader_agent = trader_agent,
-        # trade_signals = trade_signals,
-        fee_percentage = fee_percentage,
-        population_size = population_size,
-        mutation_rate = mutation_rate,
-        num_generations = num_generations,
+        buy_dnf = init_buy_dnf,
+        sell_dnf = init_sell_dnf,
+        strategies_to_use = init_strategies_to_use,
+        constituent_bot_parameters = Optimized_constituent_bot_parameters,
         number_of_disjuncts = init_number_of_disjuncts,
-        number_of_conjuncts = init_number_of_conjuncts,
-        all_strategies = all_strategies
+        all_strategies = all_strategies,
+        number_of_conjuncts = init_number_of_conjuncts
     )
 
-    best_trader = ga_optimiser.run_genetic_algorithm_ensemble()
+    trade_signals_optimized_constituents, _, _ = trader_agent_optimized_constituents.generate_signals()
 
-    best_trade_signals, _, _ = best_trader.generate_signals()
-
-    # un-optimized bot
-    best_final_balance, best_trade_results = utils.execute_trades(
-        trade_signals = best_trade_signals, 
+    # optimized constituents
+    final_balance, trade_results_optimized_constituents = utils.execute_trades(
+        trade_signals = trade_signals_optimized_constituents, 
         fee_percentage = 0.02
     )
 
-    utils.plot_trading_simulation(best_trade_results, "Optimized Ensemble", color = "orange")
+    utils.plot_trading_simulation(trade_results_optimized_constituents, "Ensemble Optimized Constituents", color = "green")
+
+    # population = [
+    #     trader_bots.ensemble_bot(
+    #         ohlcv_df = ohlcv_df_train,
+    #         buy_dnf = utils.construct_dnf(
+    #             trade_type = "buy", 
+    #             number_of_disjuncts = random.randint(2, 10), 
+    #             strategies_to_use = init_strategies_to_use,
+    #             all_strategies = all_strategies,
+    #             number_of_conjuncts = random.randint(1, 2)
+    #         ),
+    #         sell_dnf = utils.construct_dnf(
+    #             trade_type = "sell", 
+    #             number_of_disjuncts = random.randint(2, 10), 
+    #             strategies_to_use = init_strategies_to_use,
+    #             all_strategies = all_strategies,
+    #             number_of_conjuncts = random.randint(1, 2)
+    #         ),
+    #         strategies_to_use = utils.select_initial_strats(all_strategies, number_of_conjuncts = random.randint(1, 2)),
+    #         constituent_bot_parameters = Non_Optimized_constituent_bot_parameters,
+    #         number_of_disjuncts = random.randint(2, 5),
+    #         all_strategies = all_strategies,
+    #         number_of_conjuncts = random.randint(1, 2)
+    #     ) for i in range(population_size)
+    # ]
+
+    # ga_optimiser = ga.EnsembleGeneticAlgorithmOptimizer(
+    #     ohlcv_df = ohlcv_df_train,
+    #     # trader_agent = trader_agent,
+    #     # trade_signals = trade_signals,
+    #     fee_percentage = fee_percentage,
+    #     population_size = population_size,
+    #     mutation_rate = mutation_rate,
+    #     num_generations = num_generations,
+    #     number_of_disjuncts = init_number_of_disjuncts,
+    #     number_of_conjuncts = init_number_of_conjuncts,
+    #     all_strategies = all_strategies
+    # )
+
+    # best_trader = ga_optimiser.run_genetic_algorithm_ensemble()
+
+    # best_trade_signals, _, _ = best_trader.generate_signals()
+
+    # # un-optimized bot
+    # best_final_balance, best_trade_results = utils.execute_trades(
+    #     trade_signals = best_trade_signals, 
+    #     fee_percentage = 0.02
+    # )
+
+    # utils.plot_trading_simulation(best_trade_results, "Optimized Ensemble", color = "orange")
 
 
 if __name__ == "__main__":
