@@ -436,8 +436,8 @@ def plot_all_optimized_trade_results(
 
 # Ensemble Agent Run on Non-GA Optimised Constituent Agents:
 def run_ensemble_bots_non_optimal_and_optimal(Non_Optimized_constituent_bot_parameters, Optimized_constituent_bot_parameters):
-    best_ensemble_bot_non_optimised = erwin_ensemble_ga.ensemble_ga(constituent_bot_parameters=Non_Optimized_constituent_bot_parameters, population_size=population_size, number_of_generations=num_generations)
-    best_ensemble_bot_optimised = erwin_ensemble_ga.ensemble_ga(constituent_bot_parameters=Optimized_constituent_bot_parameters, population_size=population_size, number_of_generations=num_generations)
+    best_ensemble_bot_non_optimised = erwin_ensemble_ga.ensemble_ga(constituent_bot_parameters=Non_Optimized_constituent_bot_parameters, population_size=100, number_of_generations=20)
+    best_ensemble_bot_optimised = erwin_ensemble_ga.ensemble_ga(constituent_bot_parameters=Optimized_constituent_bot_parameters, population_size=100, number_of_generations=20)
     return best_ensemble_bot_non_optimised, best_ensemble_bot_optimised
 
 if __name__ == "__main__":
