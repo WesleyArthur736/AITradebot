@@ -135,17 +135,25 @@ def ensemble_ga(constituent_bot_parameters, population_size=100, number_of_gener
             # print(f"parent1: \n{parent1[1]} \n{parent1[2]}\n")
             # print(f"parent2: \n{parent2[1]} \n{parent2[2]}\n")
 
+            # # Let child inherit a buy_dnf from its parents.
+            # if random.random() < 0.5:
+            #     child_buy_dnf = parent1[1]
+            # else:
+            #     child_buy_dnf = parent2[1]
+            #
+            # # Let child inherit a sell_dnf from its parents.
+            # if random.random() < 0.5:
+            #     child_sell_dnf = parent1[2]
+            # else:
+            #     child_sell_dnf = parent2[2]
+
             # Let child inherit a buy_dnf from its parents.
             if random.random() < 0.5:
                 child_buy_dnf = parent1[1]
-            else:
-                child_buy_dnf = parent2[1]
-
-            # Let child inherit a sell_dnf from its parents.
-            if random.random() < 0.5:
-                child_sell_dnf = parent1[2]
-            else:
                 child_sell_dnf = parent2[2]
+            else:
+                child_buy_dnf = parent1[2]
+                child_sell_dnf = parent2[1]
 
             child_ensemble_bot = trader_bots.ensemble_bot(
                 ohlcv_df=ohlcv_df_train,

@@ -1,10 +1,10 @@
-{'bot_name': 'bollinger_bands_bot', 'window': 15, 'num_standard_deviations': 1.25}
-{'bot_name': 'MACD_bot', 'slow_window': 73, 'fast_window': 50, 'signal_window': 62}
-{'bot_name': 'RSI_bot', 'overbought_threshold': 100, 'oversold_threshold': 41, 'window': 87}
-{'bot_name': 'VWAP_bot', 'window': 4}
-{'bot_name': 'stochastic_oscillator_bot', 'oscillator_window': 25, 'signal_window': 6, 'overbought_threshold': 10, 'oversold_threshold': 72}
+{'bot_name': 'bollinger_bands_bot', 'window': 4, 'num_standard_deviations': 1.64}
+{'bot_name': 'MACD_bot', 'slow_window': 6, 'fast_window': 5, 'signal_window': 15}
+{'bot_name': 'RSI_bot', 'overbought_threshold': 48, 'oversold_threshold': 31, 'window': 30}
+{'bot_name': 'VWAP_bot', 'window': 6}
+{'bot_name': 'stochastic_oscillator_bot', 'oscillator_window': 81, 'signal_window': 60, 'overbought_threshold': 6, 'oversold_threshold': 27}
 {'bot_name': 'OBV_trend_following_bot'}
-{'bot_name': 'SAR_bot', 'step': 83, 'max_step': 73}
+{'bot_name': 'SAR_bot', 'step': 80, 'max_step': 41}
 {'bot_name': 'OBV_trend_reversal_bot'}
-{'bot_name': 'ROC_bot', 'window': 33, 'buy_threshold': 17, 'sell_threshold': 40}
-{'bot_name': 'Awesome_Oscillator_Bot', 'window1': 1, 'window2': 53}
+{'bot_name': 'ROC_bot', 'window': 95, 'buy_threshold': 58, 'sell_threshold': 61}
+{'bot_name': 'Awesome_Oscillator_Bot', 'window1': 88, 'window2': 98}
