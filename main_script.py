@@ -427,21 +427,26 @@ def plot_all_non_optimized_trade_results(
     roc_results,
     awesome_results
 ):
-    plt.plot(macd_results.index, macd_results["portfolio_value"], label="MACD", alpha=0.8)
+    plt.plot(macd_results.index, macd_results["portfolio_value"],
+             label=f"MACD: {round(macd_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
     plt.plot(bollinger_bands_results.index,
-             bollinger_bands_results["portfolio_value"], label="Bollinger Bands", alpha=0.8)
-    plt.plot(rsi_results.index, rsi_results["portfolio_value"], label="RSI", alpha=0.8)
-    plt.plot(vwap_results.index, vwap_results["portfolio_value"], label="VWAP", alpha=0.8)
+             bollinger_bands_results["portfolio_value"], label=f"Bollinger Bands: {round(bollinger_bands_results['portfolio_value'].iloc[-1], 2)}", alpha=0.8)
+    plt.plot(rsi_results.index, rsi_results["portfolio_value"],
+             label=f"RSI {round(rsi_results['portfolio_value'].iloc[-1], 2)}", alpha=0.8)
+    plt.plot(vwap_results.index, vwap_results["portfolio_value"],
+             label=f"VWAP {round(vwap_results['portfolio_value'].iloc[-1], 2)}", alpha=0.8)
     plt.plot(stochastic_results.index,
-             stochastic_results["portfolio_value"], label="Stochastic", alpha=0.8)
-    plt.plot(sar_results.index, sar_results["portfolio_value"], label="SAR", alpha=0.8)
+             stochastic_results["portfolio_value"], label=f"Stochastic {round(stochastic_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
+    plt.plot(sar_results.index, sar_results["portfolio_value"],
+             label=f"SAR {round(sar_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
     plt.plot(obv_following_results.index,
-             obv_following_results["portfolio_value"], label="OBV Following", alpha=0.8)
+             obv_following_results["portfolio_value"], label=f"OBV Following {round(obv_following_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
     plt.plot(obv_reversal_results.index,
-             obv_reversal_results["portfolio_value"], label="OBV Reversal", alpha=0.8)
-    plt.plot(roc_results.index, roc_results["portfolio_value"], label="ROC", alpha=0.8)
+             obv_reversal_results["portfolio_value"], label=f"OBV Reversal {round(obv_reversal_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
+    plt.plot(roc_results.index, roc_results["portfolio_value"],
+             label=f"ROC {round(roc_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
     plt.plot(awesome_results.index,
-             awesome_results["portfolio_value"], label="Awesome Oscillator", alpha=0.8)
+             awesome_results["portfolio_value"], label=f"Awesome Oscillator {round(awesome_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
 
     plt.xlabel('Day')
     plt.ylabel('Portfolio')
@@ -462,21 +467,26 @@ def plot_all_optimized_trade_results(
     roc_results,
     awesome_results
 ):
-    plt.plot(macd_results.index, macd_results["portfolio_value"], label="MACD", alpha=0.8)
+    plt.plot(macd_results.index, macd_results["portfolio_value"],
+             label=f"MACD: {round(macd_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
     plt.plot(bollinger_bands_results.index,
-             bollinger_bands_results["portfolio_value"], label="Bollinger Bands", alpha=0.8)
-    plt.plot(rsi_results.index, rsi_results["portfolio_value"], label="RSI", alpha=0.8)
-    plt.plot(vwap_results.index, vwap_results["portfolio_value"], label="VWAP", alpha=0.8)
+             bollinger_bands_results["portfolio_value"], label=f"Bollinger Bands: {round(bollinger_bands_results['portfolio_value'].iloc[-1], 2)}", alpha=0.8)
+    plt.plot(rsi_results.index, rsi_results["portfolio_value"],
+             label=f"RSI {round(rsi_results['portfolio_value'].iloc[-1], 2)}", alpha=0.8)
+    plt.plot(vwap_results.index, vwap_results["portfolio_value"],
+             label=f"VWAP {round(vwap_results['portfolio_value'].iloc[-1], 2)}", alpha=0.8)
     plt.plot(stochastic_results.index,
-             stochastic_results["portfolio_value"], label="Stochastic", alpha=0.8)
-    plt.plot(sar_results.index, sar_results["portfolio_value"], label="SAR", alpha=0.8)
+             stochastic_results["portfolio_value"], label=f"Stochastic {round(stochastic_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
+    plt.plot(sar_results.index, sar_results["portfolio_value"],
+             label=f"SAR {round(sar_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
     plt.plot(obv_following_results.index,
-             obv_following_results["portfolio_value"], label="OBV Following", alpha=0.8)
+             obv_following_results["portfolio_value"], label=f"OBV Following {round(obv_following_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
     plt.plot(obv_reversal_results.index,
-             obv_reversal_results["portfolio_value"], label="OBV Reversal", alpha=0.8)
-    plt.plot(roc_results.index, roc_results["portfolio_value"], label="ROC", alpha=0.8)
+             obv_reversal_results["portfolio_value"], label=f"OBV Reversal {round(obv_reversal_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
+    plt.plot(roc_results.index, roc_results["portfolio_value"],
+             label=f"ROC {round(roc_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
     plt.plot(awesome_results.index,
-             awesome_results["portfolio_value"], label="Awesome Oscillator", alpha=0.8)
+             awesome_results["portfolio_value"], label=f"Awesome Oscillator {round(awesome_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
 
     plt.xlabel('Day')
     plt.ylabel('Portfolio')
