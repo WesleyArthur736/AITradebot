@@ -147,6 +147,10 @@ def run_ensemble_non_optimal_constituents():
 
     utils.plot_trading_simulation(best_trade_results, "Random Ensemble", color = "orange")
 
+
+
+
+
 def run_macd_non_optimized():
     trader_agent = trader_bots.MACD_bot(
         ohlcv_df = ohlcv_df_train,
@@ -214,7 +218,6 @@ def run_macd_ga_optimized():
     ga_optimiser = ga.GeneticAlgorithmOptimizer(
         ohlcv_df = ohlcv_df_train,
         trader_agent = trader_agent,
-        trade_signals = trade_signals,
         fee_percentage = 0.0,
         population_size = population_size,
         mutation_rate = mutation_rate,
@@ -244,7 +247,6 @@ def run_macd_ga_optimized():
         trade_signals = best_trade_signals, 
         fee_percentage = 0.0
     )
-    utils.plot_trading_simulation(trade_results, "Non Optimized MACD", color = "red")
     utils.plot_trading_simulation(best_trade_results, "Optimized MACD", color = "green")
 
 
@@ -284,7 +286,11 @@ if __name__ == "__main__":
     ### CONSTITUENT BOTS ###
 
     # run_macd_non_optimized()
-    run_bolliger_band_non_optimized()
+    # run_bolliger_band_non_optimized()
+
+    ### GA OPTIMISED CONSTITUENT BOTS ###
+    run_macd_ga_optimized()
+
 
 
     ### ENSEMBLE BOTS ###
