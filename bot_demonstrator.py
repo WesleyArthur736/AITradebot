@@ -210,6 +210,7 @@ if __name__ == "__main__":
     OBV_trend_following_parameters = {'bot_name': 'OBV_trend_following_bot'}
     OBV_trend_reversal_parameters = {'bot_name': 'OBV_trend_reversal_bot'}
     ROC_parameters = {'bot_name': 'ROC_bot', 'window': 12, 'buy_threshold': 5, 'sell_threshold': -5}
+    Awesome_Oscillator_parameters = {'bot_name': 'Awesome_Oscillator_Bot', 'window1': 5, 'window2': 34}
 
     all_parameters = [
         MACD_parameters, 
@@ -220,7 +221,8 @@ if __name__ == "__main__":
         OBV_trend_following_parameters,
         SAR_parameters,
         OBV_trend_reversal_parameters,
-        ROC_parameters
+        ROC_parameters,
+        Awesome_Oscillator_parameters
         ]
 
     main(fee_percentage)

@@ -14,7 +14,7 @@ from ta.volatility import BollingerBands
 import utils
 import trader_bots
 
-from sklearn.model_selection import train_test_split, KFold
+# from sklearn.model_selection import train_test_split, KFold
 
 
 class GeneticAlgorithmOptimizer(object):
@@ -57,7 +57,7 @@ class GeneticAlgorithmOptimizer(object):
 
         return child_bot
 
-    def mutate(self, trader_agent, mutation_rate, param_variance = 0.1, delta = 10):
+    def mutate(self, trader_agent, mutation_rate, param_variance=0.1, delta=10):
         """
         Randomly modifies the genes of the trader agent with a certain probability.
         This is achieved by simply adding Gaussian white noise to the float parameters of 
@@ -79,8 +79,8 @@ class GeneticAlgorithmOptimizer(object):
 
         return trader_agent
 
-
     # def run_genetic_algorithm(self, n_elite, tournament_size):
+
     def run_genetic_algorithm(self, population, n_elite, tournament_size):
         """
         Implements 'Elitism' and uses tournament selection for the parents
@@ -89,7 +89,7 @@ class GeneticAlgorithmOptimizer(object):
         # # Generate an initial population of trader agents with random parameters
         # population = [
         #     type(self.trader_agent)(
-        #         ohlcv_df = self.ohlcv_df, 
+        #         ohlcv_df = self.ohlcv_df,
         #         *self.trader_agent_params
         #     ) for _ in range(self.population_size)
         # ] # THIS IS NOT CORRECT!!!!!
@@ -97,7 +97,7 @@ class GeneticAlgorithmOptimizer(object):
         # Generate an initial population of trader agents with random parameters
         # population = [
         #     type(self.trader_agent)(
-        #         self.ohlcv_df, 
+        #         self.ohlcv_df,
         #         *self.trader_agent_params
         #     ) for _ in range(self.population_size)
         # ] # THIS IS NOT CORRECT!!!!!
@@ -108,10 +108,12 @@ class GeneticAlgorithmOptimizer(object):
 
             # Evaluate the fitness of each trader agent
             # fitness_scores = [self.fitness(trader_agent, self.trade_signals, self.fee_percentage) for trader_agent in population]
-            fitness_scores = [self.fitness(trader_agent, trader_agent.trade_signals, self.fee_percentage) for trader_agent in population]
+            fitness_scores = [self.fitness(
+                trader_agent, trader_agent.generate_signals(), self.fee_percentage) for trader_agent in population]
 
             # Select the top-performing trader agents to be the elite members of the next generation
-            elite_indices = sorted(range(len(fitness_scores)), key=lambda i: fitness_scores[i], reverse=True)[:n_elite]
+            elite_indices = sorted(range(
+                len(fitness_scores)), key=lambda i: fitness_scores[i], reverse=True)[:n_elite]
             elite_population = [population[i] for i in elite_indices]
 
             # Randomly select the rest of the parents for the next generation using tournament selection
@@ -119,12 +121,15 @@ class GeneticAlgorithmOptimizer(object):
             parents = []
             for j in range(num_parents):
                 # Select a random subset of the population to compete in the tournament
-                tournament_indices = random.sample(range(len(population)), tournament_size)
+                tournament_indices = random.sample(
+                    range(len(population)), tournament_size)
                 tournament = [population[i] for i in tournament_indices]
 
                 # Choose the best individual from the tournament as a parent
-                tournament_fitness = [fitness_scores[i] for i in tournament_indices]
-                best_index = max(range(len(tournament_fitness)), key=lambda i: tournament_fitness[i])
+                tournament_fitness = [fitness_scores[i]
+                                      for i in tournament_indices]
+                best_index = max(range(len(tournament_fitness)),
+                                 key=lambda i: tournament_fitness[i])
                 best_parent = tournament[best_index]
 
                 parents.append(best_parent)
@@ -137,7 +142,8 @@ class GeneticAlgorithmOptimizer(object):
                     new_population.append(elite_population[i])
                 else:
                     # Select two random parents for uniform crossover
-                    parent1_index, parent2_index = random.sample(range(len(parents)), 2)
+                    parent1_index, parent2_index = random.sample(
+                        range(len(parents)), 2)
                     parent1 = parents[parent1_index]
                     parent2 = parents[parent2_index]
 
@@ -155,9 +161,11 @@ class GeneticAlgorithmOptimizer(object):
 
         # Return the best-performing trader agent
         # fitness_scores = [self.fitness(trader_agent, self.trade_signals, self.fee_percentage) for trader_agent in population]
-        fitness_scores = [self.fitness(trader_agent, trader_agent.trade_signals, self.fee_percentage) for trader_agent in population]
+        fitness_scores = [self.fitness(
+            trader_agent, trader_agent.generate_signals(), self.fee_percentage) for trader_agent in population]
 
-        best_index = max(range(len(fitness_scores)), key=lambda i: fitness_scores[i])
+        best_index = max(range(len(fitness_scores)),
+                         key=lambda i: fitness_scores[i])
 
         return population[best_index]
 
@@ -165,10 +173,10 @@ class GeneticAlgorithmOptimizer(object):
 class EnsembleGeneticAlgorithmOptimizer(object):
 
     def __init__(
-            self, ohlcv_df, trader_agent, trade_signals, fee_percentage, 
-            population_size, mutation_rate, num_generations, 
-            number_of_disjuncts, number_of_conjuncts, all_strategies
-        ):
+        self, ohlcv_df, trader_agent, trade_signals, fee_percentage,
+        population_size, mutation_rate, num_generations,
+        number_of_disjuncts, number_of_conjuncts, all_strategies
+    ):
 
         self.trader_agent = trader_agent
         self.trader_agent_params = trader_agent.params
@@ -206,14 +214,14 @@ class EnsembleGeneticAlgorithmOptimizer(object):
                 child_params.append(p_2_param)
 
         child_bot = type(self.trader_agent)(
-            ohlcv_df = self.trader_agent.ohlcv_df,
-            buy_dnf = child_params[2],
-            sell_dnf = child_params[3],
-            strategies_to_use = child_params[1],
-            constituent_bot_parameters = self.trader_agent.constituent_bot_parameters,
-            number_of_disjuncts = child_params[0],
-            all_strategies = self.trader_agent.all_strategies,
-            number_of_conjuncts = child_params[4]
+            ohlcv_df=self.trader_agent.ohlcv_df,
+            buy_dnf=child_params[2],
+            sell_dnf=child_params[3],
+            strategies_to_use=child_params[1],
+            constituent_bot_parameters=self.trader_agent.constituent_bot_parameters,
+            number_of_disjuncts=child_params[0],
+            all_strategies=self.trader_agent.all_strategies,
+            number_of_conjuncts=child_params[4]
         )
 
         return child_bot
@@ -223,17 +231,17 @@ class EnsembleGeneticAlgorithmOptimizer(object):
         # ensemble_bot.params = [self.number_of_disjuncts, self.strategies_to_use, self.buy_dnf, self.sell_dnf]
 
         trader_agent.params[2] = utils.mutate_dnf(
-            trader_agent.params[2], 
-            is_buy_dnf = True, 
-            all_strategies = all_strategies,
-            num_disjuncts_mutate = num_disjuncts_mutate
+            trader_agent.params[2],
+            is_buy_dnf=True,
+            all_strategies=all_strategies,
+            num_disjuncts_mutate=num_disjuncts_mutate
         )
 
         trader_agent.params[3] = utils.mutate_dnf(
-            trader_agent.params[3], 
-            is_buy_dnf = False, 
-            all_strategies = all_strategies,
-            num_disjuncts_mutate = num_disjuncts_mutate
+            trader_agent.params[3],
+            is_buy_dnf=False,
+            all_strategies=all_strategies,
+            num_disjuncts_mutate=num_disjuncts_mutate
         )
 
         return trader_agent
@@ -246,15 +254,15 @@ class EnsembleGeneticAlgorithmOptimizer(object):
         #     type(self.trader_agent)(
         #         ohlcv_df = self.trader_agent.ohlcv_df,
         #         buy_dnf = utils.construct_dnf(
-        #             trade_type = "buy", 
-        #             number_of_disjuncts = random.randint(2, 5), 
+        #             trade_type = "buy",
+        #             number_of_disjuncts = random.randint(2, 5),
         #             strategies_to_use = init_strategies_to_use,
         #             all_strategies = all_strategies,
         #             number_of_conjuncts = random.randint(1, 3)
         #         ),
         #         sell_dnf = utils.construct_dnf(
-        #             trade_type = "sell", 
-        #             number_of_disjuncts = random.randint(2, 5), 
+        #             trade_type = "sell",
+        #             number_of_disjuncts = random.randint(2, 5),
         #             strategies_to_use = init_strategies_to_use,
         #             all_strategies = all_strategies,
         #             number_of_conjuncts = random.randint(1, 3)
@@ -272,7 +280,8 @@ class EnsembleGeneticAlgorithmOptimizer(object):
             print(f"\ngeneration: {i}")
 
             # Evaluate the fitness of each trader agent
-            fitness_scores = [self.fitness(trader_agent, trader_agent.trade_signals, self.fee_percentage) for trader_agent in population]
+            fitness_scores = [self.fitness(
+                trader_agent, trader_agent.trade_signals, self.fee_percentage) for trader_agent in population]
 
             for ensb_bot in population:
                 # print(f"\nensb_bot.buy_dnf:\n{ensb_bot.buy_dnf}\n")
@@ -280,7 +289,8 @@ class EnsembleGeneticAlgorithmOptimizer(object):
                 print(f"\nfitness_scores_1: {fitness_scores}\n")
 
             # Select the top-performing trader agents to be the elite members of the next generation
-            elite_indices = sorted(range(len(fitness_scores)), key=lambda i: fitness_scores[i], reverse=True)[:n_elite]
+            elite_indices = sorted(range(
+                len(fitness_scores)), key=lambda i: fitness_scores[i], reverse=True)[:n_elite]
             elite_population = [population[i] for i in elite_indices]
 
             # Randomly select the rest of the parents for the next generation using tournament selection
@@ -292,12 +302,15 @@ class EnsembleGeneticAlgorithmOptimizer(object):
                 # print(f"\nrandom.sample(list(range(len(population))), tournament_size): {random.sample(list(range(len(population))), tournament_size)}")
                 # print(f"tournament_size: {tournament_size}\n")
 
-                tournament_indices = random.sample(range(len(population)), tournament_size)
+                tournament_indices = random.sample(
+                    range(len(population)), tournament_size)
                 tournament = [population[i] for i in tournament_indices]
 
                 # Choose the best individual from the tournament as a parent
-                tournament_fitness = [fitness_scores[i] for i in tournament_indices]
-                best_index = max(range(len(tournament_fitness)), key=lambda i: tournament_fitness[i])
+                tournament_fitness = [fitness_scores[i]
+                                      for i in tournament_indices]
+                best_index = max(range(len(tournament_fitness)),
+                                 key=lambda i: tournament_fitness[i])
                 best_parent = tournament[best_index]
 
                 parents.append(best_parent)
@@ -310,25 +323,28 @@ class EnsembleGeneticAlgorithmOptimizer(object):
                     new_population.append(elite_population[i])
                 else:
                     # Select two random parents for uniform crossover
-                    parent1_index, parent2_index = random.sample(range(len(parents)), 2)
+                    parent1_index, parent2_index = random.sample(
+                        range(len(parents)), 2)
                     parent1 = parents[parent1_index]
                     parent2 = parents[parent2_index]
 
                     # Perform uniform crossover to create a new child bot
-                    child_bot = self.ensemble_uniform_crossover(parent1, parent2)
+                    child_bot = self.ensemble_uniform_crossover(
+                        parent1, parent2)
 
                     # Mutate the child bot with a certain probability
-                    child_bot = self.ensemble_mutate(child_bot, self.mutation_rate, num_disjuncts_mutate, all_strategies)
+                    child_bot = self.ensemble_mutate(
+                        child_bot, self.mutation_rate, num_disjuncts_mutate, all_strategies)
 
                     # Add the child bot to the new population
                     new_population.append(child_bot)
-
 
             # Replace the old population with the new one
             population = new_population
 
         # Return the best-performing trader agent
-        fitness_scores = [self.fitness(trader_agent, trader_agent.trade_signals, self.fee_percentage) for trader_agent in population]
+        fitness_scores = [self.fitness(
+            trader_agent, trader_agent.trade_signals, self.fee_percentage) for trader_agent in population]
 
         for ensb_bot in population:
             # print(f"\nensb_bot.buy_dnf:\n{ensb_bot.buy_dnf}\n")
@@ -339,20 +355,21 @@ class EnsembleGeneticAlgorithmOptimizer(object):
         # population = [population[i] for i in all_indices]
         # return population[0]
 
-        best_index = max(range(len(fitness_scores)), key=lambda i: fitness_scores[i])
+        best_index = max(range(len(fitness_scores)),
+                         key=lambda i: fitness_scores[i])
 
         return population[best_index]
-
 
     def brute_force_search_ensemble(self, population):
 
         # Evaluate the fitness of each trader agent
-        fitness_scores = [self.fitness(trader_agent, trader_agent.trade_signals, self.fee_percentage) for trader_agent in population]
+        fitness_scores = [self.fitness(
+            trader_agent, trader_agent.trade_signals, self.fee_percentage) for trader_agent in population]
         score_agent_pairs = []
         for fitness_score, trader_agent in zip(fitness_scores, population):
             score_agent_pairs.append([fitness_score, trader_agent])
 
-        best_instance_so_far = max(score_agent_pairs, key = lambda x: x[0])
+        best_instance_so_far = max(score_agent_pairs, key=lambda x: x[0])
 
         for i in range(self.num_generations):
 
@@ -362,18 +379,18 @@ class EnsembleGeneticAlgorithmOptimizer(object):
                 trader_agent.trade_signals = trader_agent.generate_signals()
 
             # Evaluate the fitness of each trader agent
-            fitness_scores = [self.fitness(trader_agent, trader_agent.trade_signals, self.fee_percentage) for trader_agent in population]
+            fitness_scores = [self.fitness(
+                trader_agent, trader_agent.trade_signals, self.fee_percentage) for trader_agent in population]
             score_agent_pairs = []
             for fitness_score, trader_agent in zip(fitness_scores, population):
                 score_agent_pairs.append([fitness_score, trader_agent])
 
-            contender = max(score_agent_pairs, key = lambda x: x[0])
+            contender = max(score_agent_pairs, key=lambda x: x[0])
 
             if contender[0] > best_instance_so_far[0]:
                 best_instance_so_far = contender
 
         return best_instance_so_far[1]
-
 
 
 # if __name__ == "__main__":
@@ -411,8 +428,8 @@ class EnsembleGeneticAlgorithmOptimizer(object):
 
 #     # trader_agent = trader_bots.MACD_bot(
 #     #     ohlcv_df = ohlcv_df_train,
-#     #     slow_window = slow_window, 
-#     #     fast_window = fast_window, 
+#     #     slow_window = slow_window,
+#     #     fast_window = fast_window,
 #     #     signal_window = signal_window
 #     # )
 
@@ -420,7 +437,7 @@ class EnsembleGeneticAlgorithmOptimizer(object):
 
 #     # # un-optimized bot
 #     # final_balance, trade_results = utils.execute_trades(
-#     #     trade_signals = trade_signals, 
+#     #     trade_signals = trade_signals,
 #     #     fee_percentage = 0.0
 #     # )
 
@@ -441,11 +458,11 @@ class EnsembleGeneticAlgorithmOptimizer(object):
 #     #         fast_window = random.randint(1, 100),
 #     #         signal_window = random.randint(1, 100),
 #     #     ) for _ in range(population_size)
-#     # ] 
+#     # ]
 
 #     # best_trader = ga_optimiser.run_genetic_algorithm(
 #     #     population = population,
-#     #     n_elite = 2, 
+#     #     n_elite = 2,
 #     #     tournament_size = 5
 #     # )
 
@@ -454,15 +471,11 @@ class EnsembleGeneticAlgorithmOptimizer(object):
 
 #     # # optimized bot
 #     # best_final_balance, best_trade_results = utils.execute_trades(
-#     #     trade_signals = best_trade_signals, 
+#     #     trade_signals = best_trade_signals,
 #     #     fee_percentage = 0.0
 #     # )
 #     # utils.plot_trading_simulation(trade_results, "Random MACD", color = "red")
 #     # utils.plot_trading_simulation(best_trade_results, "Optimized MACD", color = "green")
-
-
-
-
 
 
 #     MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': 26, 'fast_window': 12, 'signal_window': 9}
@@ -476,11 +489,11 @@ class EnsembleGeneticAlgorithmOptimizer(object):
 #     ROC_parameters = {'bot_name': 'ROC_bot', 'window': 12, 'buy_threshold': 5, 'sell_threshold': -5}
 #     Awesome_Osillator = {'bot_name': 'Awesome_Oscillator_Bot', 'window1': 5 , 'window2': 34}
 
-#     constituent_bot_parameters = [ 
-#         Bollinger_Bands_parameters, 
+#     constituent_bot_parameters = [
+#         Bollinger_Bands_parameters,
 #         MACD_parameters,
-#         RSI_parameters, 
-#         VWAP_parameters, 
+#         RSI_parameters,
+#         VWAP_parameters,
 #         Stochastic_Oscillator_parameters,
 #         OBV_trend_following_parameters,
 #         SAR_parameters,
@@ -490,22 +503,22 @@ class EnsembleGeneticAlgorithmOptimizer(object):
 #     ]
 
 #     all_strategies = [
-#         'MACD_bot', 'bollinger_bands_bot', 
-#         'RSI_bot', 'VWAP_bot', 
-#         'stochastic_oscillator_bot', 
+#         'MACD_bot', 'bollinger_bands_bot',
+#         'RSI_bot', 'VWAP_bot',
+#         'stochastic_oscillator_bot',
 #         'SAR_bot',
 #         'OBV_trend_following_bot',
 #         'OBV_trend_reversal_bot',
 #         'ROC_bot', 'Awesome_Oscillator_Bot'
 #     ]
 
-#     # init strats randomly 
+#     # init strats randomly
 #     init_strategies_to_use = utils.select_initial_strats(all_strategies, init_number_of_conjuncts)
 
 #     # construct initial buy_dnf
 #     init_buy_dnf = utils.construct_dnf(
-#         trade_type = "buy", 
-#         number_of_disjuncts = init_number_of_disjuncts, 
+#         trade_type = "buy",
+#         number_of_disjuncts = init_number_of_disjuncts,
 #         strategies_to_use = init_strategies_to_use,
 #         all_strategies = all_strategies,
 #         number_of_conjuncts = init_number_of_conjuncts
@@ -513,8 +526,8 @@ class EnsembleGeneticAlgorithmOptimizer(object):
 
 #     # construct initial sell_dnf
 #     init_sell_dnf = utils.construct_dnf(
-#         trade_type = "sell", 
-#         number_of_disjuncts = init_number_of_disjuncts, 
+#         trade_type = "sell",
+#         number_of_disjuncts = init_number_of_disjuncts,
 #         strategies_to_use = init_strategies_to_use,
 #         all_strategies = all_strategies,
 #         number_of_conjuncts = init_number_of_conjuncts
@@ -538,7 +551,7 @@ class EnsembleGeneticAlgorithmOptimizer(object):
 
 #     # un-optimized bot
 #     final_balance, trade_results = utils.execute_trades(
-#         trade_signals = trade_signals, 
+#         trade_signals = trade_signals,
 #         fee_percentage = 0.0
 #     )
 
@@ -546,15 +559,15 @@ class EnsembleGeneticAlgorithmOptimizer(object):
 #         trader_bots.ensemble_bot(
 #             ohlcv_df = ohlcv_df_train,
 #             buy_dnf = utils.construct_dnf(
-#                 trade_type = "buy", 
-#                 number_of_disjuncts = random.randint(2, 10), 
+#                 trade_type = "buy",
+#                 number_of_disjuncts = random.randint(2, 10),
 #                 strategies_to_use = init_strategies_to_use,
 #                 all_strategies = all_strategies,
 #                 number_of_conjuncts = random.randint(1, 2)
 #             ),
 #             sell_dnf = utils.construct_dnf(
-#                 trade_type = "sell", 
-#                 number_of_disjuncts = random.randint(2, 10), 
+#                 trade_type = "sell",
+#                 number_of_disjuncts = random.randint(2, 10),
 #                 strategies_to_use = init_strategies_to_use,
 #                 all_strategies = all_strategies,
 #                 number_of_conjuncts = random.randint(1, 2)
@@ -595,14 +608,11 @@ class EnsembleGeneticAlgorithmOptimizer(object):
 
 #     # optimized bot
 #     best_final_balance, best_trade_results = utils.execute_trades(
-#         trade_signals = best_trade_signals, 
+#         trade_signals = best_trade_signals,
 #         fee_percentage = 0.0
 #     )
 #     utils.plot_trading_simulation(trade_results, "Random Ensemble", color = "blue")
 #     utils.plot_trading_simulation(best_trade_results, "Optimized Ensemble", color = "purple")
-
-
-
 
 
 #     # # instantiate a bot - in this case the stochastic oscillator
