@@ -33,7 +33,7 @@ def run_buy_hold_strategy():
         fee_percentage = 0.0
     )
 
-    print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
+    # print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
     # utils.plot_trading_simulation(trade_results, "Non Optimized Bollinger Bands", color = "blue")
 
     return trade_results
@@ -60,6 +60,8 @@ def run_macd_non_optimized():
     print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
     # utils.plot_trading_simulation(trade_results, "Non Optimized MACD", color = "red")
 
+    return trade_signals, trader_agent
+
 def run_bollinger_bands_non_optimized():
     trader_agent = trader_bots.bollinger_bands_bot(
         ohlcv_df = ohlcv_df_train,
@@ -75,8 +77,75 @@ def run_bollinger_bands_non_optimized():
         fee_percentage = 0.0
     )
 
-    print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
+    # print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
     # utils.plot_trading_simulation(trade_results, "Non Optimized Bollinger Bands", color = "blue")
+
+    return trade_signals, trader_agent
+
+
+def run_VWAP_non_optimized():
+    trader_agent = trader_bots.VWAP_bot(
+        ohlcv_df = ohlcv_df_train,
+        window = random.randint(1, 100), 
+    )
+
+    trade_signals = trader_agent.generate_signals()
+
+    # un-optimized bot
+    final_balance, trade_results = utils.execute_trades(
+        trade_signals = trade_signals, 
+        fee_percentage = 0.0
+    )
+
+    # print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
+    # utils.plot_trading_simulation(trade_results, "Non Optimized RSI", color = "green")
+
+    return trade_signals, trader_agent
+
+
+def run_Stoch_Osc_non_optimized():
+    trader_agent = trader_bots.stochastic_oscillator_bot(
+        ohlcv_df = ohlcv_df_train,
+        oscillator_window = random.randint(1, 100), 
+        signal_window = random.randint(1, 100),
+        overbought_threshold = random.randint(1, 100),
+        oversold_threshold = random.randint(1, 100)
+    )
+
+    trade_signals = trader_agent.generate_signals()
+
+    # un-optimized bot
+    final_balance, trade_results = utils.execute_trades(
+        trade_signals = trade_signals, 
+        fee_percentage = 0.0
+    )
+
+    # print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
+    # utils.plot_trading_simulation(trade_results, "Non Optimized RSI", color = "green")
+
+    return trade_signals, trader_agent
+
+
+def run_SAR_non_optimized():
+    trader_agent = trader_bots.SAR_bot(
+        ohlcv_df = ohlcv_df_train,
+        step = random.randint(1, 100), 
+        max_step = random.randint(1, 100)
+    )
+
+    trade_signals = trader_agent.generate_signals()
+
+    # un-optimized bot
+    final_balance, trade_results = utils.execute_trades(
+        trade_signals = trade_signals, 
+        fee_percentage = 0.0
+    )
+
+    # print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
+    # utils.plot_trading_simulation(trade_results, "Non Optimized RSI", color = "green")
+
+    return trade_signals, trader_agent
+
 
 
 def run_RSI_non_optimized():
@@ -95,8 +164,10 @@ def run_RSI_non_optimized():
         fee_percentage = 0.0
     )
 
-    print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
+    # print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
     # utils.plot_trading_simulation(trade_results, "Non Optimized RSI", color = "green")
+
+    return trade_signals, trader_agent
 
 
 # GA optimised Cnstituent agents:
@@ -585,6 +656,37 @@ if __name__ == "__main__":
     # print(f"best_Awe_Osc_window2: {best_Awe_Osc_window2}")
 
 
+
+    macd_results, best_MACD_trader = run_macd_ga_optimized()
+    bollinger_bands_results, best_Bol_Band_trader = run_bollinger_bands_ga_optimized()
+    rsi_results, best_RSI_trader = run_RSI_ga_optimized()
+    vwap_results, best_VWAP_trader = run_VWAP_ga_optimized()
+    stochastic_results, best_Stoch_Osc_trader = run_stochastic_oscillator_ga_optimized()
+    sar_results, best_SAR_trader = run_SAR_ga_optimized()
+    # obv_following_results = obv_following_results()
+    # obv_reversal_results = obv_reversal_results()
+    roc_results, best_ROC_trader = run_ROC_ga_optimized()
+    awesome_results, best_Awe_Osc_trader = run_Awesome_Oscillator_ga_optimized()
+
+    # ensemble_results = run_ensemble_non_optimal_constituents()
+    buy_hold_results = run_buy_hold_strategy()
+
+    plot_all_optimized_trade_results(
+        macd_results,
+        bollinger_bands_results,
+        rsi_results,
+        vwap_results,
+        stochastic_results,
+        sar_results,
+        # obv_following_results,
+        # obv_reversal_results,
+        roc_results,
+        awesome_results,
+        buy_hold_results,
+        "Trade Results for Optimized Constituent Bots"
+    )
+
+
     Optimized_MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': best_macd_slow_window, 'fast_window': best_macd_fast_window, 'signal_window': best_macd_signal_window}
     Optimized_Bollinger_Bands_parameters = {'bot_name': 'bollinger_bands_bot', 'window': best_bollinger_window, 'num_standard_deviations': best_bollinger_num_standard_deviations}
     Optimized_RSI_parameters = {'bot_name': 'RSI_bot', 'overbought_threshold': best_rsi_overbought_threshold, 'oversold_threshold': best_rsi_oversold_threshold, 'window': best_rsi_window}
@@ -609,13 +711,11 @@ if __name__ == "__main__":
         Optimized_Awesome_Osillator
     ]
 
-    run = 1
-
-    with open("Optimized_constituent_bot_parameters_{run}.txt", "w") as f:
-        for item in Optimized_constituent_bot_parameters:
-            f.write(str(item) + "\n")
-
-    f.close()
+    # run = 1
+    # with open("Optimized_constituent_bot_parameters_{run}.txt", "w") as f:
+    #     for item in Optimized_constituent_bot_parameters:
+    #         f.write(str(item) + "\n")
+    # f.close()
 
     Non_Optimized_MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': 26, 'fast_window': 12, 'signal_window': 9}
     Non_Optimized_Bollinger_Bands_parameters = {'bot_name': 'bollinger_bands_bot', 'window': 20, 'num_standard_deviations': 2.5}
@@ -643,131 +743,3 @@ if __name__ == "__main__":
 
     ### ENSEMBLE BOTS ###
     run_ensemble_bots_non_optimal_and_optimal(Non_Optimized_constituent_bot_parameters, Optimized_constituent_bot_parameters)
-
-   
-
-
-
-
-########################################################
-
-    # population = [
-    #     trader_bots.ensemble_bot(
-    #         ohlcv_df = ohlcv_df_train,
-    #         buy_dnf = utils.construct_dnf(
-    #             trade_type = "buy", 
-    #             number_of_disjuncts = random.randint(2, 10), 
-    #             strategies_to_use = init_strategies_to_use,
-    #             all_strategies = all_strategies,
-    #             number_of_conjuncts = random.randint(1, 2)
-    #         ),
-    #         sell_dnf = utils.construct_dnf(
-    #             trade_type = "sell", 
-    #             number_of_disjuncts = random.randint(2, 10), 
-    #             strategies_to_use = init_strategies_to_use,
-    #             all_strategies = all_strategies,
-    #             number_of_conjuncts = random.randint(1, 2)
-    #         ),
-    #         strategies_to_use = utils.select_initial_strats(all_strategies, number_of_conjuncts = random.randint(1, 2)),
-    #         constituent_bot_parameters = constituent_bot_parameters,
-    #         number_of_disjuncts = random.randint(2, 5),
-    #         all_strategies = all_strategies,
-    #         number_of_conjuncts = random.randint(1, 2)
-    #     ) for i in range(population_size)
-    # ]
-
-    # ga_optimiser = ga.EnsembleGeneticAlgorithmOptimizer(
-    #     ohlcv_df = ohlcv_df_train,
-    #     trader_agent = trader_agent,
-    #     trade_signals = trade_signals,
-    #     fee_percentage = fee_percentage,
-    #     population_size = population_size,
-    #     mutation_rate = mutation_rate,
-    #     num_generations = num_generations,
-    #     number_of_disjuncts = init_number_of_disjuncts,
-    #     number_of_conjuncts = init_number_of_conjuncts,
-    #     all_strategies = all_strategies
-    # )
-
-    # best_trader = ga_optimiser.run_genetic_algorithm_ensemble(
-    #     population = population,
-    #     n_elite = 2,
-    #     tournament_size = 10,
-    #     num_disjuncts_mutate = 1,
-    #     all_strategies = all_strategies
-    # )
-
-    # # best_trade_signals = best_trader.trade_signals()
-    # best_trade_signals, _, _ = best_trader.generate_signals()
-    # best_number_of_disjuncts = best_trader.number_of_disjuncts
-    # best_strategies_to_use = best_trader.strategies_to_use
-
-    # # optimized bot
-    # best_final_balance, best_trade_results = utils.execute_trades(
-    #     trade_signals = best_trade_signals, 
-    #     fee_percentage = 0.0
-    # )
-    # utils.plot_trading_simulation(trade_results, "Random Ensemble", color = "blue")
-    # utils.plot_trading_simulation(best_trade_results, "Optimized Ensemble", color = "purple")
-
-
-
-
-
-    # # instantiate a bot - in this case the stochastic oscillator
-    # ensb_bot = trader_bots.ensemble_bot(
-    #     ohlcv_df = ohlcv_df_train,
-    #     buy_dnf = init_buy_dnf,
-    #     sell_dnf = init_sell_dnf,
-    #     strategies_to_use = init_strategies_to_use,
-    #     constituent_bot_parameters = constituent_bot_parameters,
-    #     number_of_disjuncts = init_number_of_disjuncts,
-    #     all_strategies = all_strategies,
-    #     number_of_conjuncts = init_number_of_conjuncts
-    # )
-
-    # # generate the trading signals with the bot's technical indicator:
-    # trade_signals, buy_dnf, sell_dnf = ensb_bot.generate_signals()
-
-    # # instantiate a GeneticAlgorithmOptimizer
-    # ga_optimizer = ga.EnsembleGeneticAlgorithmOptimizer(
-    #     ohlcv_df = ohlcv_df_train,
-    #     trader_agent = ensb_bot,
-    #     trade_signals = trade_signals,
-    #     fee_percentage = fee_percentage,
-    #     population_size = population_size,
-    #     mutation_rate = mutation_rate,
-    #     num_generations = num_generations,
-    #     number_of_disjuncts = init_number_of_disjuncts,
-    #     number_of_conjuncts = init_number_of_conjuncts,
-    #     all_strategies = all_strategies
-    # )
-
-    # ### Run the Genetic Algorithm ###
-    # best_agent = ga_optimizer.run_genetic_algorithm_ensemble(
-    #     n_elite = 10,
-    #     tournament_size = 50,
-    #     num_disjuncts_mutate = 1,
-    #     all_strategies = all_strategies
-    # )
-
-    # best_number_of_disjuncts = best_agent.number_of_disjuncts
-    # best_strategies_to_use = best_agent.strategies_to_use
-
-    # print(f"\n\nbest_number_of_disjuncts:\n{best_number_of_disjuncts}")
-    # print(f"best_strategies_to_use:\n{best_strategies_to_use}\n\n")
-
-    # # generate the trading signals with the bot's technical indicator:
-    # best_trade_signals, best_buy_dnf, best_sell_dnf = best_agent.generate_signals()
-
-    # print(f"\nbest buy_dnf:\n{best_buy_dnf}")
-    # print(f"\nbest sell_dnf:\n{best_sell_dnf}\n")
-
-    # # print(f"Best agent's Trade Signals:\n{best_trade_signals}")
-
-    # best_final_balance, best_trade_results = utils.execute_trades(best_trade_signals, fee_percentage)
-
-    # # print(f"Best agent's Trade Results:\n{best_trade_results}")
-    # # print(f"Best agent's Final Balance:\n{best_final_balance}")
-
-    # utils.plot_trading_simulation(best_trade_results, "Best")
