@@ -117,7 +117,7 @@ def run_macd_ga_optimized():
 
     print(f"best_trade_results['portfolio_value'].iloc[-1]: {best_trade_results['portfolio_value'].iloc[-1]}")
 
-    return best_trade_results
+    return best_trade_results, best_trader
 
 
 def run_bollinger_bands_ga_optimized():
@@ -154,7 +154,7 @@ def run_bollinger_bands_ga_optimized():
     )
     # utils.plot_trading_simulation(best_trade_results, "Optimized Bollinger Bands", color = "green")
 
-    return best_trade_results
+    return best_trade_results, best_trader
 
 def run_RSI_ga_optimized():
 
@@ -193,7 +193,7 @@ def run_RSI_ga_optimized():
     print(f"best window: ")
     # utils.plot_trading_simulation(best_trade_results, "Optimized Bollinger Bands", color = "green")
 
-    return best_trade_results
+    return best_trade_results, best_trader
 
 
 def run_VWAP_ga_optimized():
@@ -230,7 +230,7 @@ def run_VWAP_ga_optimized():
     )
     # utils.plot_trading_simulation(best_trade_results, "Optimized VWAP", color = "green")
 
-    return best_trade_results
+    return best_trade_results, best_trader
 
 def run_stochastic_oscillator_ga_optimized():
     ga_optimiser = ga.GeneticAlgorithmOptimizer(
@@ -268,7 +268,7 @@ def run_stochastic_oscillator_ga_optimized():
     )
     # utils.plot_trading_simulation(best_trade_results, "Optimized VWAP", color = "green")
 
-    return best_trade_results
+    return best_trade_results, best_trader
 
 def run_SAR_ga_optimized():
     ga_optimiser = ga.GeneticAlgorithmOptimizer(
@@ -303,7 +303,7 @@ def run_SAR_ga_optimized():
     )
     # utils.plot_trading_simulation(best_trade_results, "Optimized SAR", color = "green")
 
-    return best_trade_results
+    return best_trade_results, best_trader
 
 def run_ROC_ga_optimized():
     ga_optimiser = ga.GeneticAlgorithmOptimizer(
@@ -339,7 +339,7 @@ def run_ROC_ga_optimized():
     )
     # utils.plot_trading_simulation(best_trade_results, "Optimized ROC", color = "green")
 
-    return best_trade_results
+    return best_trade_results, best_trader
 
 def run_Awesome_Oscillator_ga_optimized():
     ga_optimiser = ga.GeneticAlgorithmOptimizer(
@@ -374,70 +374,73 @@ def run_Awesome_Oscillator_ga_optimized():
     )
     # utils.plot_trading_simulation(best_trade_results, "Optimized ROC", color = "green")
 
-    return best_trade_results
+    return best_trade_results, best_trader
 
 def plot_all_optimized_trade_results(
-    macd_results,
-    bollinger_bands_results,
-    rsi_results,
-    vwap_results,
-    stochastic_results,
-    sar_results,
-    # obv_following_results,
-    # obv_reversal_results,
-    roc_results,
-    awesome_results
-    ):
-    plt.plot(macd_results.index, macd_results["portfolio_value"], label="MACD", alpha=0.8)
+        macd_results,
+        bollinger_bands_results,
+        rsi_results,
+        vwap_results,
+        stochastic_results,
+        sar_results,
+        # obv_following_results,
+        # obv_reversal_results,
+        roc_results,
+        awesome_results,
+        title
+        ):
+
+    plt.plot(macd_results.index, macd_results["portfolio_value"],
+             label=f"MACD: {round(macd_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
     plt.plot(bollinger_bands_results.index,
-             bollinger_bands_results["portfolio_value"], label="Bollinger Bands", alpha=0.8)
-    plt.plot(rsi_results.index, rsi_results["portfolio_value"], label="RSI", alpha=0.8)
-    plt.plot(vwap_results.index, vwap_results["portfolio_value"], label="VWAP", alpha=0.8)
+             bollinger_bands_results["portfolio_value"], label=f"Bollinger Bands: {round(bollinger_bands_results['portfolio_value'].iloc[-1], 2)}", alpha=0.8)
+    plt.plot(rsi_results.index, rsi_results["portfolio_value"],
+             label=f"RSI {round(rsi_results['portfolio_value'].iloc[-1], 2)}", alpha=0.8)
+    plt.plot(vwap_results.index, vwap_results["portfolio_value"],
+             label=f"VWAP {round(vwap_results['portfolio_value'].iloc[-1], 2)}", alpha=0.8)
     plt.plot(stochastic_results.index,
-             stochastic_results["portfolio_value"], label="Stochastic", alpha=0.8)
-    plt.plot(sar_results.index, sar_results["portfolio_value"], label="SAR", alpha=0.8)
-    # plt.plot(obv_following_results.index,
-             # obv_following_results["portfolio_value"], label="OBV Following", alpha=0.8)
-    # plt.plot(obv_reversal_results.index,
-             # obv_reversal_results["portfolio_value"], label="OBV Reversal", alpha=0.8)
-    plt.plot(roc_results.index, roc_results["portfolio_value"], label="ROC", alpha=0.8)
+             stochastic_results["portfolio_value"], label=f"Stochastic {round(stochastic_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
+    plt.plot(sar_results.index, sar_results["portfolio_value"],
+             label=f"SAR {round(sar_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
+    plt.plot(roc_results.index, roc_results["portfolio_value"],
+             label=f"ROC {round(roc_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
     plt.plot(awesome_results.index,
-             awesome_results["portfolio_value"], label="Awesome Oscillator", alpha=0.8)
+             awesome_results["portfolio_value"], label=f"Awesome Oscillator {round(awesome_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
 
     plt.xlabel('Day')
     plt.ylabel('Portfolio')
-    plt.title('Optimized Trade Results')
+    plt.title(f'{title}')
     plt.legend()
     plt.show()
 
 
 
 # Ensemble Agent Run on Non-GA Optimised Constituent Agents:
-def run_ensemble_non_optimal_constituents():
+def run_ensemble_bot_kinds(Non_Optimized_constituent_bot_parameters, Optimized_constituent_bot_parameters):
 
-    MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': 26, 'fast_window': 12, 'signal_window': 9}
-    Bollinger_Bands_parameters = {'bot_name': 'bollinger_bands_bot', 'window': 20, 'num_standard_deviations': 2.5}
-    RSI_parameters = {'bot_name': 'RSI_bot', 'overbought_threshold': 70, 'oversold_threshold': 30, 'window': 14}
-    VWAP_parameters = {'bot_name': 'VWAP_bot', 'window': 20}
-    Stochastic_Oscillator_parameters = {'bot_name': 'stochastic_oscillator_bot', 'oscillator_window': 14, 'signal_window': 3, 'overbought_threshold': 80, 'oversold_threshold': 20}
-    SAR_parameters = {'bot_name': 'SAR_bot', 'step': 0.02, 'max_step': 0.2}
-    OBV_trend_following_parameters = {'bot_name': 'OBV_trend_following_bot'}
-    OBV_trend_reversal_parameters = {'bot_name': 'OBV_trend_reversal_bot'}
-    ROC_parameters = {'bot_name': 'ROC_bot', 'window': 12, 'buy_threshold': 5, 'sell_threshold': -5}
-    Awesome_Osillator = {'bot_name': 'Awesome_Oscillator_Bot', 'window1': 5 , 'window2': 34}
+    # MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': 26, 'fast_window': 12, 'signal_window': 9}
+    # Bollinger_Bands_parameters = {'bot_name': 'bollinger_bands_bot', 'window': 20, 'num_standard_deviations': 2.5}
+    # RSI_parameters = {'bot_name': 'RSI_bot', 'overbought_threshold': 70, 'oversold_threshold': 30, 'window': 14}
+    # VWAP_parameters = {'bot_name': 'VWAP_bot', 'window': 20}
+    # Stochastic_Oscillator_parameters = {'bot_name': 'stochastic_oscillator_bot', 'oscillator_window': 14, 'signal_window': 3, 'overbought_threshold': 80, 'oversold_threshold': 20}
+    # SAR_parameters = {'bot_name': 'SAR_bot', 'step': 0.02, 'max_step': 0.2}
+    # OBV_trend_following_parameters = {'bot_name': 'OBV_trend_following_bot'}
+    # OBV_trend_reversal_parameters = {'bot_name': 'OBV_trend_reversal_bot'}
+    # ROC_parameters = {'bot_name': 'ROC_bot', 'window': 12, 'buy_threshold': 5, 'sell_threshold': -5}
+    # Awesome_Osillator = {'bot_name': 'Awesome_Oscillator_Bot', 'window1': 5 , 'window2': 34}
 
-    constituent_bot_parameters = [ 
-        Bollinger_Bands_parameters, 
-        MACD_parameters,
-        RSI_parameters, 
-        VWAP_parameters, 
-        Stochastic_Oscillator_parameters,
-        OBV_trend_following_parameters,
-        SAR_parameters,
-        OBV_trend_reversal_parameters,
-        ROC_parameters,
-        Awesome_Osillator
-    ]
+    # constituent_bot_parameters = [ 
+    #     Bollinger_Bands_parameters, 
+    #     MACD_parameters,
+    #     RSI_parameters, 
+    #     VWAP_parameters, 
+    #     Stochastic_Oscillator_parameters,
+    #     OBV_trend_following_parameters,
+    #     SAR_parameters,
+    #     OBV_trend_reversal_parameters,
+    #     ROC_parameters,
+    #     Awesome_Osillator
+    # ]
 
     all_strategies = [
         'MACD_bot', 'bollinger_bands_bot', 
@@ -486,7 +489,7 @@ def run_ensemble_non_optimal_constituents():
     # un-optimized bot
     final_balance, trade_results = utils.execute_trades(
         trade_signals = trade_signals, 
-        fee_percentage = 0.0
+        fee_percentage = 0.02
     )
 
     utils.plot_trading_simulation(trade_results, "Random Ensemble", color = "blue")
@@ -518,8 +521,8 @@ def run_ensemble_non_optimal_constituents():
 
     ga_optimiser = ga.EnsembleGeneticAlgorithmOptimizer(
         ohlcv_df = ohlcv_df_train,
-        trader_agent = trader_agent,
-        trade_signals = trade_signals,
+        # trader_agent = trader_agent,
+        # trade_signals = trade_signals,
         fee_percentage = fee_percentage,
         population_size = population_size,
         mutation_rate = mutation_rate,
@@ -529,17 +532,17 @@ def run_ensemble_non_optimal_constituents():
         all_strategies = all_strategies
     )
 
-    best_trader = ga_optimiser.brute_force_search_ensemble(population)
+    best_trader = ga_optimiser.run_genetic_algorithm_ensemble()
 
     best_trade_signals, _, _ = best_trader.generate_signals()
 
     # un-optimized bot
     best_final_balance, best_trade_results = utils.execute_trades(
         trade_signals = best_trade_signals, 
-        fee_percentage = 0.0
+        fee_percentage = 0.02
     )
 
-    utils.plot_trading_simulation(best_trade_results, "Random Ensemble", color = "orange")
+    utils.plot_trading_simulation(best_trade_results, "Optimized Ensemble", color = "orange")
 
 
 if __name__ == "__main__":
@@ -590,18 +593,16 @@ if __name__ == "__main__":
     # run_ROC_ga_optimized()
     # run_Awesome_Oscillator_ga_optimized()
 
-    macd_results = run_macd_ga_optimized()
-
-    bollinger_bands_results = run_bollinger_bands_ga_optimized()
-    rsi_results = run_RSI_ga_optimized()
-    vwap_results= run_VWAP_ga_optimized()
-
-    stochastic_results = run_stochastic_oscillator_ga_optimized()
-    sar_results = run_SAR_ga_optimized()
+    macd_results, best_MACD_trader = run_macd_ga_optimized()
+    bollinger_bands_results, best_Bol_Band_trader = run_bollinger_bands_ga_optimized()
+    rsi_results, best_RSI_trader = run_RSI_ga_optimized()
+    vwap_results, best_VWAP_trader = run_VWAP_ga_optimized()
+    stochastic_results, best_Stoch_Osc_trader = run_stochastic_oscillator_ga_optimized()
+    sar_results, best_SAR_trader = run_SAR_ga_optimized()
     # obv_following_results = obv_following_results()
     # obv_reversal_results = obv_reversal_results()
-    roc_results = run_ROC_ga_optimized()
-    awesome_results = run_Awesome_Oscillator_ga_optimized()
+    roc_results, best_ROC_trader = run_ROC_ga_optimized()
+    awesome_results, best_Awe_Osc_trader = run_Awesome_Oscillator_ga_optimized()
 
     plot_all_optimized_trade_results(
         macd_results,
@@ -613,14 +614,135 @@ if __name__ == "__main__":
         # obv_following_results,
         # obv_reversal_results,
         roc_results,
-        awesome_results
+        awesome_results,
+        "Trade Results for Optimized Constituent Bots"
     )
 
+    ######## Best MACD params:
+    best_macd_slow_window = best_MACD_trader.slow_window
+    best_macd_fast_window = best_MACD_trader.fast_window
+    best_macd_signal_window = best_MACD_trader.signal_window
+
+    # print(f"best_macd_slow_window: {best_macd_slow_window}")
+    # print(f"best_macd_fast_window: {best_macd_fast_window}")
+    # print(f"best_macd_signal_window: {best_macd_signal_window}")
+
+    ######## Best Bollinger Bands Params:
+    best_bollinger_window = best_Bol_Band_trader.window
+    best_bollinger_num_standard_deviations = best_Bol_Band_trader.num_standard_deviations
+
+    # print(f"best_bollinger_window: {best_bollinger_window}")
+    # print(f"best_bollinger_num_standard_deviations: {best_bollinger_num_standard_deviations}")
+
+    ######## Best RSI params:
+    best_rsi_window = best_RSI_trader.window
+    best_rsi_overbought_threshold = best_RSI_trader.overbought_threshold
+    best_rsi_oversold_threshold = best_RSI_trader.oversold_threshold
+
+    # print(f"best_rsi_window: {best_rsi_window}")
+    # print(f"best_rsi_overbought_threshold: {best_rsi_overbought_threshold}")
+    # print(f"best_rsi_oversold_threshold: {best_rsi_oversold_threshold}")
+
+    ######## Best VWAP Params:
+    best_vwap_window = best_VWAP_trader.window
+
+    # print(f"best_vwap_window: {best_vwap_window}")
+
+    ######## Best Stochastic Oscillator Params:
+    # oscillator_window, signal_window, overbought_threshold, oversold_threshold
+    best_stoch_osc_oscillator_window = best_Stoch_Osc_trader.oscillator_window
+    best_stoch_osc_signal_window = best_Stoch_Osc_trader.signal_window
+    best_stoch_osc_overbought_threshold = best_Stoch_Osc_trader.overbought_threshold
+    best_stoch_osc_oversold_threshold = best_Stoch_Osc_trader.oversold_threshold
+
+    # print(f"best_stoch_osc_oscillator_window: {best_stoch_osc_oscillator_window}")
+    # print(f"best_stoch_osc_signal_window: {best_stoch_osc_signal_window}")
+    # print(f"best_stoch_osc_overbought_threshold: {best_stoch_osc_overbought_threshold}")
+    # print(f"best_stoch_osc_oversold_threshold: {best_stoch_osc_oversold_threshold}")
+
+    ######## Best SAR Params:
+    best_sar_step = best_SAR_trader.step
+    best_sar_max_step = best_SAR_trader.max_step
+
+    # print(f"best_sar_step: {best_sar_step}")
+    # print(f"best_sar_max_step: {best_sar_max_step}")
+
+    ######## Best ROC Params:
+    best_roc_window = best_ROC_trader.window
+    best_roc_buy_threshold = best_ROC_trader.buy_threshold
+    best_roc_sell_threshold = best_ROC_trader.sell_threshold
+
+    # print(f"best_roc_window: {best_roc_window}")
+    # print(f"best_roc_buy_threshold: {best_roc_buy_threshold}")
+    # print(f"best_roc_sell_threshold: {best_roc_sell_threshold}")
 
 
+    ######## Best Awesome Oscillator Params:
+    best_Awe_Osc_window1 = best_Awe_Osc_trader.window1
+    best_Awe_Osc_window2 = best_Awe_Osc_trader.window2
+
+    # print(f"best_Awe_Osc_window1: {best_Awe_Osc_window1}")
+    # print(f"best_Awe_Osc_window2: {best_Awe_Osc_window2}")
+
+
+    Optimized_MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': best_macd_slow_window, 'fast_window': best_macd_fast_window, 'signal_window': best_macd_signal_window}
+    Optimized_Bollinger_Bands_parameters = {'bot_name': 'bollinger_bands_bot', 'window': best_bollinger_window, 'num_standard_deviations': best_bollinger_num_standard_deviations}
+    Optimized_RSI_parameters = {'bot_name': 'RSI_bot', 'overbought_threshold': best_rsi_overbought_threshold, 'oversold_threshold': best_rsi_oversold_threshold, 'window': best_rsi_window}
+    Optimized_VWAP_parameters = {'bot_name': 'VWAP_bot', 'window': best_vwap_window}
+    Optimized_Stochastic_Oscillator_parameters = {'bot_name': 'stochastic_oscillator_bot', 'oscillator_window': best_stoch_osc_oscillator_window, 'signal_window': best_stoch_osc_signal_window, 'overbought_threshold': best_stoch_osc_overbought_threshold, 'oversold_threshold': best_stoch_osc_oversold_threshold}
+    Optimized_SAR_parameters = {'bot_name': 'SAR_bot', 'step': best_sar_step, 'max_step': best_sar_max_step}
+    Optimized_OBV_trend_following_parameters = {'bot_name': 'OBV_trend_following_bot'}
+    Optimized_OBV_trend_reversal_parameters = {'bot_name': 'OBV_trend_reversal_bot'}
+    Optimized_ROC_parameters = {'bot_name': 'ROC_bot', 'window': best_roc_window, 'buy_threshold': best_roc_buy_threshold, 'sell_threshold': best_roc_sell_threshold}
+    Optimized_Awesome_Osillator = {'bot_name': 'Awesome_Oscillator_Bot', 'window1': best_Awe_Osc_window1 , 'window2': best_Awe_Osc_window2}
+
+    Optimized_constituent_bot_parameters = [ 
+        Optimized_Bollinger_Bands_parameters, 
+        Optimized_MACD_parameters,
+        Optimized_RSI_parameters, 
+        Optimized_VWAP_parameters, 
+        Optimized_Stochastic_Oscillator_parameters,
+        Optimized_OBV_trend_following_parameters,
+        Optimized_SAR_parameters,
+        Optimized_OBV_trend_reversal_parameters,
+        Optimized_ROC_parameters,
+        Optimized_Awesome_Osillator
+    ]
+
+    run = 1
+
+    with open("Optimized_constituent_bot_parameters_{run}.txt", "w") as f:
+        for item in Optimized_constituent_bot_parameters:
+            f.write(str(item) + "\n")
+
+    f.close()
+
+    Non_Optimized_MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': 26, 'fast_window': 12, 'signal_window': 9}
+    Non_Optimized_Bollinger_Bands_parameters = {'bot_name': 'bollinger_bands_bot', 'window': 20, 'num_standard_deviations': 2.5}
+    Non_Optimized_RSI_parameters = {'bot_name': 'RSI_bot', 'overbought_threshold': 70, 'oversold_threshold': 30, 'window': 14}
+    Non_Optimized_VWAP_parameters = {'bot_name': 'VWAP_bot', 'window': 20}
+    Non_Optimized_Stochastic_Oscillator_parameters = {'bot_name': 'stochastic_oscillator_bot', 'oscillator_window': 14, 'signal_window': 3, 'overbought_threshold': 80, 'oversold_threshold': 20}
+    Non_Optimized_SAR_parameters = {'bot_name': 'SAR_bot', 'step': 0.02, 'max_step': 0.2}
+    Non_Optimized_OBV_trend_following_parameters = {'bot_name': 'OBV_trend_following_bot'}
+    Non_Optimized_OBV_trend_reversal_parameters = {'bot_name': 'OBV_trend_reversal_bot'}
+    Non_Optimized_ROC_parameters = {'bot_name': 'ROC_bot', 'window': 12, 'buy_threshold': 5, 'sell_threshold': -5}
+    Non_Optimized_Awesome_Osillator = {'bot_name': 'Awesome_Oscillator_Bot', 'window1': 5 , 'window2': 34}
+
+    Non_Optimized_constituent_bot_parameters = [ 
+        Non_Optimized_Bollinger_Bands_parameters, 
+        Non_Optimized_MACD_parameters,
+        Non_Optimized_RSI_parameters, 
+        Non_Optimized_VWAP_parameters, 
+        Non_Optimized_Stochastic_Oscillator_parameters,
+        Non_Optimized_OBV_trend_following_parameters,
+        Non_Optimized_SAR_parameters,
+        Non_Optimized_OBV_trend_reversal_parameters,
+        Non_Optimized_ROC_parameters,
+        Non_Optimized_Awesome_Osillator
+    ]
 
     ### ENSEMBLE BOTS ###
-    # run_ensemble_non_optimal_constituents()
+    run_ensemble_bot_kinds(Non_Optimized_constituent_bot_parameters, Optimized_constituent_bot_parameters)
 
    
 

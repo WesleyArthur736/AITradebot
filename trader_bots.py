@@ -555,6 +555,10 @@ class Awesome_Oscillator_Bot:
 
         return trade_signals
 
+# class buy_and_hold(Bot):
+    
+#     def __init__(self, )
+
 class ensemble_bot(Bot):
 
     def __init__(self, ohlcv_df, buy_dnf, sell_dnf, strategies_to_use, constituent_bot_parameters, number_of_disjuncts, all_strategies, number_of_conjuncts):

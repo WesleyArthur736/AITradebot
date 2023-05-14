@@ -165,14 +165,17 @@ class GeneticAlgorithmOptimizer(object):
 
 class EnsembleGeneticAlgorithmOptimizer(object):
 
+    # def __init__(
+    #         self, ohlcv_df, trader_agent, trade_signals, fee_percentage, 
+    #         population_size, mutation_rate, num_generations, 
+    #         number_of_disjuncts, number_of_conjuncts, all_strategies
+    #     ):
     def __init__(
-            self, ohlcv_df, trader_agent, trade_signals, fee_percentage, 
+            self, ohlcv_df, trade_signals, fee_percentage, 
             population_size, mutation_rate, num_generations, 
             number_of_disjuncts, number_of_conjuncts, all_strategies
         ):
-
-        self.trader_agent = trader_agent
-        self.trader_agent_params = trader_agent.params
+        # self.trader_agent_params = trader_agent.params
 
         self.trade_signals = trade_signals
         self.fee_percentage = fee_percentage
@@ -273,7 +276,7 @@ class EnsembleGeneticAlgorithmOptimizer(object):
             print(f"\ngeneration: {i}")
 
             # Evaluate the fitness of each trader agent
-            fitness_scores = [self.fitness(trader_agent, trader_agent.trade_signals, self.fee_percentage) for trader_agent in population]
+            fitness_scores = [self.fitness(trader_agent, trader_agent.generate_signals(), self.fee_percentage) for trader_agent in population]
 
             for ensb_bot in population:
                 # print(f"\nensb_bot.buy_dnf:\n{ensb_bot.buy_dnf}\n")
@@ -329,7 +332,7 @@ class EnsembleGeneticAlgorithmOptimizer(object):
             population = new_population
 
         # Return the best-performing trader agent
-        fitness_scores = [self.fitness(trader_agent, trader_agent.trade_signals, self.fee_percentage) for trader_agent in population]
+        fitness_scores = [self.fitness(trader_agent, trader_agent.generate_signals(), self.fee_percentage) for trader_agent in population]
 
         for ensb_bot in population:
             # print(f"\nensb_bot.buy_dnf:\n{ensb_bot.buy_dnf}\n")
