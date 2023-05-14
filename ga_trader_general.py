@@ -20,12 +20,13 @@ from sklearn.model_selection import train_test_split, KFold
 class GeneticAlgorithmOptimizer(object):
 
     # def __init__(self, ohlcv_df, trader_agent, trade_signals, fee_percentage, population_size, mutation_rate, num_generations):
-    def __init__(self, ohlcv_df, trader_agent, fee_percentage, population_size, mutation_rate, num_generations):
-        self.trader_agent = trader_agent
-        self.trader_agent_params = trader_agent.params
-        
+    # def __init__(self, ohlcv_df, trader_agent, fee_percentage, population_size, mutation_rate, num_generations):
+    def __init__(self, ohlcv_df, fee_percentage, population_size, mutation_rate, num_generations):
+        # self.trader_agent = trader_agent
+        # self.trader_agent_params = trader_agent.params
+
         self.fee_percentage = fee_percentage
-        self.bot_type = trader_agent.bot_type
+        # self.bot_type = trader_agent.bot_type
 
         self.population_size = population_size
         self.mutation_rate = mutation_rate

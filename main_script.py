@@ -19,6 +19,400 @@ import ga_trader_general as ga
 
 
 
+
+# Non-GA Optimised Constituent agents:
+def run_macd_non_optimized():
+    trader_agent = trader_bots.MACD_bot(
+        ohlcv_df = ohlcv_df_train,
+        slow_window = slow_window, 
+        fast_window = fast_window, 
+        signal_window = signal_window
+    )
+
+    trade_signals = trader_agent.generate_signals()
+
+    # un-optimized bot
+    final_balance, trade_results = utils.execute_trades(
+        trade_signals = trade_signals, 
+        fee_percentage = 0.0
+    )
+
+    print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
+    # utils.plot_trading_simulation(trade_results, "Non Optimized MACD", color = "red")
+
+def run_bollinger_bands_non_optimized():
+    trader_agent = trader_bots.bollinger_bands_bot(
+        ohlcv_df = ohlcv_df_train,
+        window = window, 
+        num_standard_deviations = num_standard_deviations
+    )
+
+    trade_signals = trader_agent.generate_signals()
+
+    # un-optimized bot
+    final_balance, trade_results = utils.execute_trades(
+        trade_signals = trade_signals, 
+        fee_percentage = 0.0
+    )
+
+    print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
+    # utils.plot_trading_simulation(trade_results, "Non Optimized Bollinger Bands", color = "blue")
+
+
+def run_RSI_non_optimized():
+    trader_agent = trader_bots.RSI_bot(
+        ohlcv_df = ohlcv_df_train,
+        window = window, 
+        overbought_threshold = overbought_threshold, 
+        oversold_threshold = oversold_threshold,
+    )
+
+    trade_signals = trader_agent.generate_signals()
+
+    # un-optimized bot
+    final_balance, trade_results = utils.execute_trades(
+        trade_signals = trade_signals, 
+        fee_percentage = 0.0
+    )
+
+    print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
+    # utils.plot_trading_simulation(trade_results, "Non Optimized RSI", color = "green")
+
+
+# GA optimised Cnstituent agents:
+def run_macd_ga_optimized():
+
+    ga_optimiser = ga.GeneticAlgorithmOptimizer(
+        ohlcv_df = ohlcv_df_train,
+        fee_percentage = 0.0,
+        population_size = population_size,
+        mutation_rate = mutation_rate,
+        num_generations = num_generations
+    )
+
+    population = [
+        trader_bots.MACD_bot(
+            ohlcv_df = ohlcv_df_train,
+            slow_window = random.randint(1, 100),
+            fast_window = random.randint(1, 100),
+            signal_window = random.randint(1, 100),
+        ) for _ in range(population_size)
+    ] 
+
+    best_trader = ga_optimiser.run_genetic_algorithm(
+        population = population,
+        n_elite = 2, 
+        tournament_size = 5
+    )
+
+    # best_trade_signals = best_trader.trade_signals()
+    best_trade_signals = best_trader.generate_signals()
+
+    # optimized bot
+    best_final_balance, best_trade_results = utils.execute_trades(
+        trade_signals = best_trade_signals, 
+        fee_percentage = 0.0
+    )
+    # utils.plot_trading_simulation(best_trade_results, "Optimized MACD", color = "green")
+
+    print(f"best_trade_results['portfolio_value'].iloc[-1]: {best_trade_results['portfolio_value'].iloc[-1]}")
+
+    return best_trade_results
+
+
+def run_bollinger_bands_ga_optimized():
+
+    ga_optimiser = ga.GeneticAlgorithmOptimizer(
+        ohlcv_df = ohlcv_df_train,
+        fee_percentage = 0.0,
+        population_size = population_size,
+        mutation_rate = mutation_rate,
+        num_generations = num_generations
+    )
+
+    population = [
+        trader_bots.bollinger_bands_bot(
+            ohlcv_df = ohlcv_df_train,
+            window = random.randint(1, 100), 
+            num_standard_deviations = round(random.uniform(0, 2), 2)
+        ) for _ in range(population_size)
+    ] 
+
+    best_trader = ga_optimiser.run_genetic_algorithm(
+        population = population,
+        n_elite = 2, 
+        tournament_size = 5
+    )
+
+    # best_trade_signals = best_trader.trade_signals()
+    best_trade_signals = best_trader.generate_signals()
+
+    # optimized bot
+    best_final_balance, best_trade_results = utils.execute_trades(
+        trade_signals = best_trade_signals, 
+        fee_percentage = 0.0
+    )
+    # utils.plot_trading_simulation(best_trade_results, "Optimized Bollinger Bands", color = "green")
+
+    return best_trade_results
+
+def run_RSI_ga_optimized():
+
+    ga_optimiser = ga.GeneticAlgorithmOptimizer(
+        ohlcv_df = ohlcv_df_train,
+        # trader_agent = trader_agent,
+        fee_percentage = 0.0,
+        population_size = population_size,
+        mutation_rate = mutation_rate,
+        num_generations = num_generations
+    )
+
+    population = [
+        trader_bots.RSI_bot(
+            ohlcv_df = ohlcv_df_train,
+            window = random.randint(1, 100), 
+            overbought_threshold = random.randint(1, 100),
+            oversold_threshold = random.randint(1, 100)
+        ) for _ in range(population_size)
+    ] 
+
+    best_trader = ga_optimiser.run_genetic_algorithm(
+        population = population,
+        n_elite = 2, 
+        tournament_size = 5
+    )
+
+    # best_trade_signals = best_trader.trade_signals()
+    best_trade_signals = best_trader.generate_signals()
+
+    # optimized bot
+    best_final_balance, best_trade_results = utils.execute_trades(
+        trade_signals = best_trade_signals, 
+        fee_percentage = 0.0
+    )
+    print(f"best window: ")
+    # utils.plot_trading_simulation(best_trade_results, "Optimized Bollinger Bands", color = "green")
+
+    return best_trade_results
+
+
+def run_VWAP_ga_optimized():
+
+    ga_optimiser = ga.GeneticAlgorithmOptimizer(
+        ohlcv_df = ohlcv_df_train,
+        # trader_agent = trader_agent,
+        fee_percentage = 0.0,
+        population_size = population_size,
+        mutation_rate = mutation_rate,
+        num_generations = num_generations
+    )
+
+    population = [
+        trader_bots.VWAP_bot(
+            ohlcv_df = ohlcv_df_train,
+            window = random.randint(1, 100), 
+        ) for _ in range(population_size)
+    ] 
+
+    best_trader = ga_optimiser.run_genetic_algorithm(
+        population = population,
+        n_elite = 2, 
+        tournament_size = 5
+    )
+
+    # best_trade_signals = best_trader.trade_signals()
+    best_trade_signals = best_trader.generate_signals()
+
+    # optimized bot
+    best_final_balance, best_trade_results = utils.execute_trades(
+        trade_signals = best_trade_signals, 
+        fee_percentage = 0.0
+    )
+    # utils.plot_trading_simulation(best_trade_results, "Optimized VWAP", color = "green")
+
+    return best_trade_results
+
+def run_stochastic_oscillator_ga_optimized():
+    ga_optimiser = ga.GeneticAlgorithmOptimizer(
+        ohlcv_df = ohlcv_df_train,
+        # trader_agent = trader_agent,
+        fee_percentage = 0.0,
+        population_size = population_size,
+        mutation_rate = mutation_rate,
+        num_generations = num_generations
+    )
+
+    population = [
+        trader_bots.stochastic_oscillator_bot(
+            ohlcv_df = ohlcv_df_train,
+            oscillator_window = random.randint(1, 100), 
+            signal_window = random.randint(1, 100),
+            overbought_threshold = random.randint(1, 100),
+            oversold_threshold = random.randint(1, 100)
+        ) for _ in range(population_size)
+    ] 
+
+    best_trader = ga_optimiser.run_genetic_algorithm(
+        population = population,
+        n_elite = 2, 
+        tournament_size = 5
+    )
+
+    # best_trade_signals = best_trader.trade_signals()
+    best_trade_signals = best_trader.generate_signals()
+
+    # optimized bot
+    best_final_balance, best_trade_results = utils.execute_trades(
+        trade_signals = best_trade_signals, 
+        fee_percentage = 0.0
+    )
+    # utils.plot_trading_simulation(best_trade_results, "Optimized VWAP", color = "green")
+
+    return best_trade_results
+
+def run_SAR_ga_optimized():
+    ga_optimiser = ga.GeneticAlgorithmOptimizer(
+        ohlcv_df = ohlcv_df_train,
+        fee_percentage = 0.0,
+        population_size = population_size,
+        mutation_rate = mutation_rate,
+        num_generations = num_generations
+    )
+
+    population = [
+        trader_bots.SAR_bot(
+            ohlcv_df = ohlcv_df_train,
+            step = random.randint(1, 100), 
+            max_step = random.randint(1, 100)
+        ) for _ in range(population_size)
+    ] 
+
+    best_trader = ga_optimiser.run_genetic_algorithm(
+        population = population,
+        n_elite = 2,
+        tournament_size = 5
+    )
+
+    # best_trade_signals = best_trader.trade_signals()
+    best_trade_signals = best_trader.generate_signals()
+
+    # optimized bot
+    best_final_balance, best_trade_results = utils.execute_trades(
+        trade_signals = best_trade_signals, 
+        fee_percentage = 0.0
+    )
+    # utils.plot_trading_simulation(best_trade_results, "Optimized SAR", color = "green")
+
+    return best_trade_results
+
+def run_ROC_ga_optimized():
+    ga_optimiser = ga.GeneticAlgorithmOptimizer(
+        ohlcv_df = ohlcv_df_train,
+        fee_percentage = 0.0,
+        population_size = population_size,
+        mutation_rate = mutation_rate,
+        num_generations = num_generations
+    )
+
+    population = [
+        trader_bots.ROC_bot(
+            ohlcv_df = ohlcv_df_train,
+            window = random.randint(1, 100),
+            buy_threshold = random.randint(1, 100),
+            sell_threshold = random.randint(1, 100)
+        ) for _ in range(population_size)
+    ] 
+
+    best_trader = ga_optimiser.run_genetic_algorithm(
+        population = population,
+        n_elite = 2,
+        tournament_size = 5
+    )
+
+    # best_trade_signals = best_trader.trade_signals()
+    best_trade_signals = best_trader.generate_signals()
+
+    # optimized bot
+    best_final_balance, best_trade_results = utils.execute_trades(
+        trade_signals = best_trade_signals, 
+        fee_percentage = 0.0
+    )
+    # utils.plot_trading_simulation(best_trade_results, "Optimized ROC", color = "green")
+
+    return best_trade_results
+
+def run_Awesome_Oscillator_ga_optimized():
+    ga_optimiser = ga.GeneticAlgorithmOptimizer(
+        ohlcv_df = ohlcv_df_train,
+        fee_percentage = 0.0,
+        population_size = population_size,
+        mutation_rate = mutation_rate,
+        num_generations = num_generations
+    )
+
+    population = [
+        trader_bots.Awesome_Oscillator_Bot(
+            ohlcv_df = ohlcv_df_train,
+            window1 = random.randint(1, 100),
+            window2 = random.randint(1, 100)
+        ) for _ in range(population_size)
+    ] 
+
+    best_trader = ga_optimiser.run_genetic_algorithm(
+        population = population,
+        n_elite = 2,
+        tournament_size = 5
+    )
+
+    # best_trade_signals = best_trader.trade_signals()
+    best_trade_signals = best_trader.generate_signals()
+
+    # optimized bot
+    best_final_balance, best_trade_results = utils.execute_trades(
+        trade_signals = best_trade_signals, 
+        fee_percentage = 0.0
+    )
+    # utils.plot_trading_simulation(best_trade_results, "Optimized ROC", color = "green")
+
+    return best_trade_results
+
+def plot_all_optimized_trade_results(
+    macd_results,
+    bollinger_bands_results,
+    rsi_results,
+    vwap_results,
+    stochastic_results,
+    sar_results,
+    # obv_following_results,
+    # obv_reversal_results,
+    roc_results,
+    awesome_results
+    ):
+    plt.plot(macd_results.index, macd_results["portfolio_value"], label="MACD", alpha=0.8)
+    plt.plot(bollinger_bands_results.index,
+             bollinger_bands_results["portfolio_value"], label="Bollinger Bands", alpha=0.8)
+    plt.plot(rsi_results.index, rsi_results["portfolio_value"], label="RSI", alpha=0.8)
+    plt.plot(vwap_results.index, vwap_results["portfolio_value"], label="VWAP", alpha=0.8)
+    plt.plot(stochastic_results.index,
+             stochastic_results["portfolio_value"], label="Stochastic", alpha=0.8)
+    plt.plot(sar_results.index, sar_results["portfolio_value"], label="SAR", alpha=0.8)
+    # plt.plot(obv_following_results.index,
+             # obv_following_results["portfolio_value"], label="OBV Following", alpha=0.8)
+    # plt.plot(obv_reversal_results.index,
+             # obv_reversal_results["portfolio_value"], label="OBV Reversal", alpha=0.8)
+    plt.plot(roc_results.index, roc_results["portfolio_value"], label="ROC", alpha=0.8)
+    plt.plot(awesome_results.index,
+             awesome_results["portfolio_value"], label="Awesome Oscillator", alpha=0.8)
+
+    plt.xlabel('Day')
+    plt.ylabel('Portfolio')
+    plt.title('Optimized Trade Results')
+    plt.legend()
+    plt.show()
+
+
+
+# Ensemble Agent Run on Non-GA Optimised Constituent Agents:
 def run_ensemble_non_optimal_constituents():
 
     MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': 26, 'fast_window': 12, 'signal_window': 9}
@@ -148,108 +542,6 @@ def run_ensemble_non_optimal_constituents():
     utils.plot_trading_simulation(best_trade_results, "Random Ensemble", color = "orange")
 
 
-
-
-
-def run_macd_non_optimized():
-    trader_agent = trader_bots.MACD_bot(
-        ohlcv_df = ohlcv_df_train,
-        slow_window = slow_window, 
-        fast_window = fast_window, 
-        signal_window = signal_window
-    )
-
-    trade_signals = trader_agent.generate_signals()
-
-    # un-optimized bot
-    final_balance, trade_results = utils.execute_trades(
-        trade_signals = trade_signals, 
-        fee_percentage = 0.0
-    )
-
-    print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
-    utils.plot_trading_simulation(trade_results, "Non Optimized MACD", color = "red")
-
-def run_bolliger_band_non_optimized():
-    trader_agent = trader_bots.bollinger_bands_bot(
-        ohlcv_df = ohlcv_df_train,
-        window = window, 
-        num_standard_deviations = num_standard_deviations
-    )
-
-    trade_signals = trader_agent.generate_signals()
-
-    # un-optimized bot
-    final_balance, trade_results = utils.execute_trades(
-        trade_signals = trade_signals, 
-        fee_percentage = 0.0
-    )
-
-    print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
-    utils.plot_trading_simulation(trade_results, "Non Optimized Bollinger Bands", color = "blue")
-
-def run_bolliger_band_non_optimized():
-    trader_agent = trader_bots.RSI_bot(
-        ohlcv_df = ohlcv_df_train,
-        window = window, 
-        overbought_threshold = overbought_threshold, 
-        oversold_threshold = oversold_threshold,
-    )
-
-    trade_signals = trader_agent.generate_signals()
-
-    # un-optimized bot
-    final_balance, trade_results = utils.execute_trades(
-        trade_signals = trade_signals, 
-        fee_percentage = 0.0
-    )
-
-    print(f"trade_results['portfolio_value'].iloc[-1]: {trade_results['portfolio_value'].iloc[-1]}")
-    utils.plot_trading_simulation(trade_results, "Non Optimized Bollinger Bands", color = "green")
-
-def run_macd_ga_optimized():
-    trader_agent = trader_bots.MACD_bot(
-        ohlcv_df = ohlcv_df_train,
-        slow_window = slow_window, 
-        fast_window = fast_window, 
-        signal_window = signal_window
-    )
-
-    ga_optimiser = ga.GeneticAlgorithmOptimizer(
-        ohlcv_df = ohlcv_df_train,
-        trader_agent = trader_agent,
-        fee_percentage = 0.0,
-        population_size = population_size,
-        mutation_rate = mutation_rate,
-        num_generations = num_generations
-    )
-
-    population = [
-        trader_bots.MACD_bot(
-            ohlcv_df = ohlcv_df_train,
-            slow_window = random.randint(1, 100),
-            fast_window = random.randint(1, 100),
-            signal_window = random.randint(1, 100),
-        ) for _ in range(population_size)
-    ] 
-
-    best_trader = ga_optimiser.run_genetic_algorithm(
-        population = population,
-        n_elite = 2, 
-        tournament_size = 5
-    )
-
-    # best_trade_signals = best_trader.trade_signals()
-    best_trade_signals = best_trader.generate_signals()
-
-    # optimized bot
-    best_final_balance, best_trade_results = utils.execute_trades(
-        trade_signals = best_trade_signals, 
-        fee_percentage = 0.0
-    )
-    utils.plot_trading_simulation(best_trade_results, "Optimized MACD", color = "green")
-
-
 if __name__ == "__main__":
 
     # ohlcv_df = utils.get_daily_ohlcv_data()
@@ -286,10 +578,44 @@ if __name__ == "__main__":
     ### CONSTITUENT BOTS ###
 
     # run_macd_non_optimized()
-    # run_bolliger_band_non_optimized()
+    # run_bollinger_bands_non_optimized()
 
     ### GA OPTIMISED CONSTITUENT BOTS ###
-    run_macd_ga_optimized()
+    # run_macd_ga_optimized()
+    # run_bollinger_bands_ga_optimized()
+    # run_RSI_ga_optimized()
+    # run_VWAP_ga_optimized()
+    # run_stochastic_oscillator_ga_optimized()
+    # run_SAR_ga_optimized()
+    # run_ROC_ga_optimized()
+    # run_Awesome_Oscillator_ga_optimized()
+
+    macd_results = run_macd_ga_optimized()
+
+    bollinger_bands_results = run_bollinger_bands_ga_optimized()
+    rsi_results = run_RSI_ga_optimized()
+    vwap_results= run_VWAP_ga_optimized()
+
+    stochastic_results = run_stochastic_oscillator_ga_optimized()
+    sar_results = run_SAR_ga_optimized()
+    # obv_following_results = obv_following_results()
+    # obv_reversal_results = obv_reversal_results()
+    roc_results = run_ROC_ga_optimized()
+    awesome_results = run_Awesome_Oscillator_ga_optimized()
+
+    plot_all_optimized_trade_results(
+        macd_results,
+        bollinger_bands_results,
+        rsi_results,
+        vwap_results,
+        stochastic_results,
+        sar_results,
+        # obv_following_results,
+        # obv_reversal_results,
+        roc_results,
+        awesome_results
+    )
+
 
 
 
