@@ -2,6 +2,7 @@ from ccxt import kraken
 import matplotlib.pyplot as plt
 from pandas import DataFrame
 import random
+import re
 
 from trader_bots import MACD_bot, bollinger_bands_bot, RSI_bot, VWAP_bot, stochastic_oscillator_bot, SAR_bot, OBV_trend_following_bot, OBV_trend_reversal_bot, ROC_bot, Awesome_Oscillator_Bot
 
@@ -113,111 +114,49 @@ def construct_dnf(trade_type, number_of_disjuncts, strategies_to_use, all_strate
     
     return dnf
 
-def initialise_bots(ohlcv_df, constituent_bot_parameters):
-
+def initialise_bots(ohlcv_df, all_parameters):
     all_bot_signals = {}
+    all_bot_names = []
 
-    for parameter_list in constituent_bot_parameters:
+    for parameter_list in all_parameters:
         # Get the bot name and remove it from the dictionary.
-        # parameter_list_copy = dict(parameter_list)
-        parameter_list_copy = parameter_list.copy() ### Changed from the line above
-
-        # print(f"parameter_list_copy:\n{parameter_list_copy}")
+        parameter_list_copy = dict(parameter_list)
         bot_name = parameter_list_copy.pop('bot_name')
-        # self.strategy_names.append(bot_name)
-        # self.all_strategies.append(bot_name) #### Now taken care of by self.get_all_strategies
+        all_bot_names.append(bot_name)
         # Initialize the bot with its specified parameters and save output signals dataframe.
-        # signals_df = globals()[bot_name](ohlcv_df, **parameter_list_copy).generate_signals()
-
         signals_df = globals()[bot_name](ohlcv_df, **parameter_list_copy).generate_signals()
-
-        # signals_df, buy_dnf, sell_dnf = type(bot_name)(
-        #     ohlcv_df,
-        #     **parameter_list
-        # ).generate_signals()
-
         all_bot_signals[bot_name] = signals_df
 
-    return all_bot_signals
+    return all_bot_signals, all_bot_names
 
-def mutate_dnf(dnf, is_buy_dnf, all_strategies, num_disjuncts_mutate = 0):
-    """
-    Example usage/effect of applying this function:
+def mutate_dnf(dnf_string, all_bot_names):
+    # Find all occurrences of bot names in the string.
+    bot_names_in_string = re.findall('|'.join(all_bot_names), dnf_string)
 
-    dnf           = (A and B and C) or (A and D and E) or (B and E and F)
-    mutated_dnf   = mutate_dnf(dnf, all_strategies)
-    mutated_dnf   = (A and B and C) or (F and D and E) or (B and E and F)
+    # If no bot names were found, return the original string.
+    if not bot_names_in_string:
+        return dnf_string
 
-    mutated_dnf_2 = mutate_dnf(dnf, all_strategies, num_disjuncts_mutate = 3)
-    mutated_dnf_2 = (A and B and C) or (F and D and E) or (B and E and F) or H or (A and G and H) or (I and J and K)
-    """
+    # Choose a bot name to replace.
+    bot_name_to_replace = random.choice(bot_names_in_string)
 
-    if is_buy_dnf == True:
-        signal_type = "buy_signal"
-    else:
-        signal_type = "sell_signal"
+    # Choose a replacement bot name.
+    bot_name_replacement = random.choice(all_bot_names)
 
-    # Split the DNF into a list of conjunctions
-    conjunctions = dnf.split(" or ")
-    
-    # Select a random conjunction to mutate
-    mutation_idx = random.randint(0, len(conjunctions) - 1)
+    # Ensure that the replacement bot name is different.
+    while bot_name_replacement == bot_name_to_replace:
+        bot_name_replacement = random.choice(all_bot_names)
 
-    mutated_conjunction = conjunctions[mutation_idx]
-    
-    # Split the conjunction into a list of conditions
-    conditions = mutated_conjunction.split(" and ")
-    
-    # Select a random condition to mutate
-    condition_idx = random.randint(0, len(conditions) - 1)
-    mutated_condition = conditions[condition_idx]
+    # Find the indices of all occurrences of the bot name to replace.
+    indices = [i for i in range(len(dnf_string)) if dnf_string.startswith(bot_name_to_replace, i)]
 
-    # print(f"mutated_condition: {mutated_condition}")
-    # print(f'mutated_condition.split(".")[1][10:]: {mutated_condition.split(".")[1][10:]}')
-    
-    # Get the current index of the condition in all_bot_signals
-    current_idx = all_strategies.index(mutated_condition.split("[")[1][1:-5])
+    # Choose a random index to replace.
+    index_to_replace = random.choice(indices)
 
-    # Select a new index that is different from the current one
-    new_idx = random.randint(0, len(all_strategies) - 1)
-    # while new_idx == current_idx:
-    while new_idx == current_idx:
+    # Replace the chosen occurrence of the bot name with the replacement.
+    dnf_string = dnf_string[:index_to_replace] + bot_name_replacement + dnf_string[index_to_replace + len(bot_name_to_replace):]
 
-        new_idx = random.randint(0, len(all_strategies) - 1)
-
-        while all_strategies[current_idx] == all_strategies[new_idx]:
-            new_idx = random.randint(0, len(all_strategies) - 1)
-    
-    # Replace the old index with the new one in the mutated condition
-    mutated_condition = mutated_condition.replace(all_strategies[current_idx], all_strategies[new_idx])
-    
-    # Replace the old condition with the mutated one in the mutated conjunction
-    conditions[condition_idx] = mutated_condition
-    mutated_conjunction = " and ".join(conditions)
-    
-    # Replace the old conjunction with the mutated one in the original DNF
-    conjunctions[mutation_idx] = mutated_conjunction
-    
-    # Add/subtract num_disjuncts_mutate new disjuncts to the mutated DNF
-    if num_disjuncts_mutate > 0:
-        new_disjuncts = random.sample(all_strategies, num_disjuncts_mutate)
-
-        new_disjuncts = [f"all_bot_signals['{new_disjunct}'].at[index, '{signal_type}']" for new_disjunct in new_disjuncts]
-
-        new_conjunctions = [" and ".join(random.sample(new_disjuncts, random.randint(1, len(new_disjuncts)))) for _ in range(num_disjuncts_mutate)]
-
-        for new_conjunction in new_conjunctions:
-            while new_conjunctions in conjunctions:
-                new_conjunctions = [" and ".join(random.sample(new_disjuncts, random.randint(1, len(new_disjuncts)))) for _ in range(num_disjuncts_mutate)]
-        conjunctions.extend(new_conjunctions)
-
-    elif num_disjuncts_mutate < 0:
-        num_disjuncts_mutate = min(abs(num_disjuncts_mutate), len(conjunctions))
-        del conjunctions[-num_disjuncts_mutate:]
-    
-    mutated_dnf = " or ".join(conjunctions)
-    
-    return mutated_dnf
+    return dnf_string
 
 def plot_trading_simulation(trade_results, bot_type, color):
     # Create a figure and axis

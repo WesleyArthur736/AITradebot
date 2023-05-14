@@ -11,6 +11,7 @@ from ccxt import kraken
 from pandas import DataFrame, concat
 from ta.volatility import BollingerBands
 
+import erwin_ensemble_ga
 import utils
 import trader_bots
 
@@ -436,157 +437,8 @@ def plot_all_optimized_trade_results(
 
 # Ensemble Agent Run on Non-GA Optimised Constituent Agents:
 def run_ensemble_bots_non_optimal_and_optimal(Non_Optimized_constituent_bot_parameters, Optimized_constituent_bot_parameters):
-
-    # MACD_parameters = {'bot_name': 'MACD_bot', 'slow_window': 26, 'fast_window': 12, 'signal_window': 9}
-    # Bollinger_Bands_parameters = {'bot_name': 'bollinger_bands_bot', 'window': 20, 'num_standard_deviations': 2.5}
-    # RSI_parameters = {'bot_name': 'RSI_bot', 'overbought_threshold': 70, 'oversold_threshold': 30, 'window': 14}
-    # VWAP_parameters = {'bot_name': 'VWAP_bot', 'window': 20}
-    # Stochastic_Oscillator_parameters = {'bot_name': 'stochastic_oscillator_bot', 'oscillator_window': 14, 'signal_window': 3, 'overbought_threshold': 80, 'oversold_threshold': 20}
-    # SAR_parameters = {'bot_name': 'SAR_bot', 'step': 0.02, 'max_step': 0.2}
-    # OBV_trend_following_parameters = {'bot_name': 'OBV_trend_following_bot'}
-    # OBV_trend_reversal_parameters = {'bot_name': 'OBV_trend_reversal_bot'}
-    # ROC_parameters = {'bot_name': 'ROC_bot', 'window': 12, 'buy_threshold': 5, 'sell_threshold': -5}
-    # Awesome_Osillator = {'bot_name': 'Awesome_Oscillator_Bot', 'window1': 5 , 'window2': 34}
-
-    # constituent_bot_parameters = [ 
-    #     Bollinger_Bands_parameters, 
-    #     MACD_parameters,
-    #     RSI_parameters, 
-    #     VWAP_parameters, 
-    #     Stochastic_Oscillator_parameters,
-    #     OBV_trend_following_parameters,
-    #     SAR_parameters,
-    #     OBV_trend_reversal_parameters,
-    #     ROC_parameters,
-    #     Awesome_Osillator
-    # ]
-
-    all_strategies = [
-        'MACD_bot', 'bollinger_bands_bot', 
-        'RSI_bot', 'VWAP_bot', 
-        'stochastic_oscillator_bot', 
-        'SAR_bot',
-        'OBV_trend_following_bot',
-        'OBV_trend_reversal_bot',
-        'ROC_bot', 'Awesome_Oscillator_Bot'
-    ]
-
-    # init strats randomly 
-    init_strategies_to_use = utils.select_initial_strats(all_strategies, init_number_of_conjuncts)
-
-    # construct initial buy_dnf
-    init_buy_dnf = utils.construct_dnf(
-        trade_type = "buy", 
-        number_of_disjuncts = init_number_of_disjuncts, 
-        strategies_to_use = init_strategies_to_use,
-        all_strategies = all_strategies,
-        number_of_conjuncts = init_number_of_conjuncts
-    )
-
-    # construct initial sell_dnf
-    init_sell_dnf = utils.construct_dnf(
-        trade_type = "sell", 
-        number_of_disjuncts = init_number_of_disjuncts, 
-        strategies_to_use = init_strategies_to_use,
-        all_strategies = all_strategies,
-        number_of_conjuncts = init_number_of_conjuncts
-    )
-
-    trader_agent = trader_bots.ensemble_bot(
-        ohlcv_df = ohlcv_df_train,
-        buy_dnf = init_buy_dnf,
-        sell_dnf = init_sell_dnf,
-        strategies_to_use = init_strategies_to_use,
-        constituent_bot_parameters = Non_Optimized_constituent_bot_parameters,
-        number_of_disjuncts = init_number_of_disjuncts,
-        all_strategies = all_strategies,
-        number_of_conjuncts = init_number_of_conjuncts
-    )
-
-    trade_signals, _, _ = trader_agent.generate_signals()
-
-    # un-optimized bot
-    final_balance, trade_results = utils.execute_trades(
-        trade_signals = trade_signals, 
-        fee_percentage = 0.02
-    )
-
-    utils.plot_trading_simulation(trade_results, "Random Ensemble", color = "blue")
-
-
-    #######################################
-
-    trader_agent_optimized_constituents = trader_bots.ensemble_bot(
-        ohlcv_df = ohlcv_df_train,
-        buy_dnf = init_buy_dnf,
-        sell_dnf = init_sell_dnf,
-        strategies_to_use = init_strategies_to_use,
-        constituent_bot_parameters = Optimized_constituent_bot_parameters,
-        number_of_disjuncts = init_number_of_disjuncts,
-        all_strategies = all_strategies,
-        number_of_conjuncts = init_number_of_conjuncts
-    )
-
-    trade_signals_optimized_constituents, _, _ = trader_agent_optimized_constituents.generate_signals()
-
-    # optimized constituents
-    final_balance, trade_results_optimized_constituents = utils.execute_trades(
-        trade_signals = trade_signals_optimized_constituents, 
-        fee_percentage = 0.02
-    )
-
-    utils.plot_trading_simulation(trade_results_optimized_constituents, "Ensemble Optimized Constituents", color = "green")
-
-    # population = [
-    #     trader_bots.ensemble_bot(
-    #         ohlcv_df = ohlcv_df_train,
-    #         buy_dnf = utils.construct_dnf(
-    #             trade_type = "buy", 
-    #             number_of_disjuncts = random.randint(2, 10), 
-    #             strategies_to_use = init_strategies_to_use,
-    #             all_strategies = all_strategies,
-    #             number_of_conjuncts = random.randint(1, 2)
-    #         ),
-    #         sell_dnf = utils.construct_dnf(
-    #             trade_type = "sell", 
-    #             number_of_disjuncts = random.randint(2, 10), 
-    #             strategies_to_use = init_strategies_to_use,
-    #             all_strategies = all_strategies,
-    #             number_of_conjuncts = random.randint(1, 2)
-    #         ),
-    #         strategies_to_use = utils.select_initial_strats(all_strategies, number_of_conjuncts = random.randint(1, 2)),
-    #         constituent_bot_parameters = Non_Optimized_constituent_bot_parameters,
-    #         number_of_disjuncts = random.randint(2, 5),
-    #         all_strategies = all_strategies,
-    #         number_of_conjuncts = random.randint(1, 2)
-    #     ) for i in range(population_size)
-    # ]
-
-    # ga_optimiser = ga.EnsembleGeneticAlgorithmOptimizer(
-    #     ohlcv_df = ohlcv_df_train,
-    #     # trader_agent = trader_agent,
-    #     # trade_signals = trade_signals,
-    #     fee_percentage = fee_percentage,
-    #     population_size = population_size,
-    #     mutation_rate = mutation_rate,
-    #     num_generations = num_generations,
-    #     number_of_disjuncts = init_number_of_disjuncts,
-    #     number_of_conjuncts = init_number_of_conjuncts,
-    #     all_strategies = all_strategies
-    # )
-
-    # best_trader = ga_optimiser.run_genetic_algorithm_ensemble()
-
-    # best_trade_signals, _, _ = best_trader.generate_signals()
-
-    # # un-optimized bot
-    # best_final_balance, best_trade_results = utils.execute_trades(
-    #     trade_signals = best_trade_signals, 
-    #     fee_percentage = 0.02
-    # )
-
-    # utils.plot_trading_simulation(best_trade_results, "Optimized Ensemble", color = "orange")
-
+    best_bot = erwin_ensemble_ga.ensemble_ga()
+    return best_bot
 
 if __name__ == "__main__":
 
@@ -596,9 +448,9 @@ if __name__ == "__main__":
 
     fee_percentage = 0.02
 
-    population_size = 20
+    population_size = 5
     mutation_rate = 0.01
-    num_generations = 2
+    num_generations = 1
     n_elite = 2
     init_number_of_disjuncts = 5
     init_number_of_conjuncts = 2
