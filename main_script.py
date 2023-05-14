@@ -537,6 +537,11 @@ def run_ensemble_bots_non_optimal_and_optimal(Non_Optimized_constituent_bot_para
 
     utils.plot_trading_simulation(trade_results_optimized_constituents, "Ensemble Optimized Constituents", color = "green")
 
+
+
+    ##############################################################################################
+
+    
     # population = [
     #     trader_bots.ensemble_bot(
     #         ohlcv_df = ohlcv_df_train,
@@ -596,9 +601,9 @@ if __name__ == "__main__":
 
     fee_percentage = 0.02
 
-    population_size = 20
+    population_size = 100
     mutation_rate = 0.01
-    num_generations = 2
+    num_generations = 5
     n_elite = 2
     init_number_of_disjuncts = 5
     init_number_of_conjuncts = 2
