@@ -410,7 +410,7 @@ def plot_all_optimized_trade_results(
     buy_hold_results,
     title
     ):
-    plt.plot(macd_results.index, macd_results["portfolio_value"], label="MACD", alpha=0.8)
+    plt.plot(macd_results.index, macd_results["portfolio_value"], label=f"MACD: {round(macd_results['portfolio_value'].iloc[-1], 2)}", alpha=0.8)
     plt.plot(bollinger_bands_results.index,
              bollinger_bands_results["portfolio_value"], label=f"Bollinger Bands: {round(bollinger_bands_results['portfolio_value'].iloc[-1], 2)}", alpha=0.8)
     plt.plot(rsi_results.index, rsi_results["portfolio_value"],
@@ -424,7 +424,7 @@ def plot_all_optimized_trade_results(
     plt.plot(roc_results.index, roc_results["portfolio_value"],
              label=f"ROC {round(roc_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
     plt.plot(awesome_results.index, awesome_results["portfolio_value"], label=f"Awesome Oscillator {round(awesome_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
-    plt.plot(buy_hold_results.index, buy_hold_results["portfolio_value"], label="Buy-Hold Strategy", alpha=0.8)
+    plt.plot(buy_hold_results.index, buy_hold_results["portfolio_value"], label=f"Buy-Hold Strategy: {round(buy_hold_results['portfolio_value'].iloc[-1],2)}", alpha=0.8)
 
 
     plt.xlabel('Day')
@@ -448,9 +448,10 @@ if __name__ == "__main__":
 
     fee_percentage = 0.02
 
-    population_size = 10
+    population_size = 5
     mutation_rate = 0.01
-    num_generations = 5
+    num_generations = 2
+
     n_elite = 2
     init_number_of_disjuncts = 5
     init_number_of_conjuncts = 2
