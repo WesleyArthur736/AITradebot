@@ -9,7 +9,7 @@ import random
 ###############################################################################
 
 ### GA parameters
-def ensemble_ga(population_size=100, number_of_generations=20):
+def ensemble_ga(constituent_bot_parameters, population_size=100, number_of_generations=20):
     injected_population_size = 20
     mutation_rate = 0.5
 
@@ -27,6 +27,7 @@ def ensemble_ga(population_size=100, number_of_generations=20):
     ROC_parameters = {'bot_name': 'ROC_bot', 'window': 12, 'buy_threshold': 5, 'sell_threshold': -5}
 
     ### Ensemble bot parameters
+
 
     all_parameters = [
         MACD_parameters,
@@ -66,7 +67,8 @@ def ensemble_ga(population_size=100, number_of_generations=20):
 
     ### Determine constituent bot signals for training data
 
-    all_bot_signals, all_bot_names = utils.initialise_bots(ohlcv_df_train, all_parameters)
+    # all_bot_signals, all_bot_names = utils.initialise_bots(ohlcv_df_train, all_parameters)
+    all_bot_signals, all_bot_names = utils.initialise_bots(ohlcv_df_train, constituent_bot_parameters)
 
     # Check:
     # print(all_bot_signals)

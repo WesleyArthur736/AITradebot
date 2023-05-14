@@ -158,23 +158,42 @@ def mutate_dnf(dnf_string, all_bot_names):
 
     return dnf_string
 
-def plot_trading_simulation(trade_results, bot_type, color):
-    # Create a figure and axis
-    fig, ax = plt.subplots()
 
-    # Set the x-axis data (day of trading) and y-axis data (portfolio value in AUD at close)
-    x_data = trade_results.index
-    y_data = trade_results["portfolio_value"]
+def plot_trading_simulation(trade_results_list, bot_names, title_string):
+    # Create a new figure and an axes
+    fig, ax = plt.subplots(figsize=(12, 6))
 
-    # Plot the data
-    ax.plot(x_data, y_data, color = color)
+    # Set the title with additional padding
+    plt.title(title_string, fontsize=16, color='black', pad=20)
 
-    # Set the labels and title
-    ax.set_xlabel("Day of Trading")
-    ax.set_ylabel("Portfolio Value in AUD at Close")
-    ax.set_title(f"{bot_type} Bot Simulation Results")
+    # Create a color cycle (add more colors if needed)
+    colors = ['b', 'g']
 
-    # Display the plot
+    # Check if bot_names and trade_results_list have the same length
+    if len(trade_results_list) != len(bot_names):
+        raise ValueError("trade_results_list and bot_names must have the same length.")
+
+    min_date = min([df.index[0] for df in trade_results_list])
+    max_date = max([df.index[-1] for df in trade_results_list])
+
+    # Plot each set of trade results
+    for i in range(len(trade_results_list)):
+        ax.plot(trade_results_list[i].index, trade_results_list[i]["portfolio_value"], color=colors[i % len(colors)],
+                linewidth=2, label=f'{bot_names[i]} Bot')
+
+    # Set grid with less density and make it gray
+    ax.grid(True, which='major', color='gray', linestyle='--', linewidth=0.5)
+
+    # Set x and y labels with smaller font size and additional padding
+    ax.set_xlabel("Day of Trading", fontsize=12, labelpad=10)
+    ax.set_ylabel("Portfolio Value in AUD at Close", fontsize=12, labelpad=10)
+
+    # Make the start and end of the x-axis align with the first and last datapoint
+    ax.set_xlim([min_date, max_date])
+
+    # Add legend
+    ax.legend()
+
     plt.show()
 
 # def mutate_dnf(dnf, all_strategies):

@@ -434,11 +434,11 @@ def plot_all_optimized_trade_results(
     plt.show()
 
 
-
 # Ensemble Agent Run on Non-GA Optimised Constituent Agents:
 def run_ensemble_bots_non_optimal_and_optimal(Non_Optimized_constituent_bot_parameters, Optimized_constituent_bot_parameters):
-    best_bot = erwin_ensemble_ga.ensemble_ga()
-    return best_bot
+    best_ensemble_bot_non_optimised = erwin_ensemble_ga.ensemble_ga(constituent_bot_parameters=Non_Optimized_constituent_bot_parameters, population_size=population_size, number_of_generations=num_generations)
+    best_ensemble_bot_optimised = erwin_ensemble_ga.ensemble_ga(constituent_bot_parameters=Optimized_constituent_bot_parameters, population_size=population_size, number_of_generations=num_generations)
+    return best_ensemble_bot_non_optimised, best_ensemble_bot_optimised
 
 if __name__ == "__main__":
 
@@ -448,9 +448,9 @@ if __name__ == "__main__":
 
     fee_percentage = 0.02
 
-    population_size = 5
+    population_size = 10
     mutation_rate = 0.01
-    num_generations = 1
+    num_generations = 5
     n_elite = 2
     init_number_of_disjuncts = 5
     init_number_of_conjuncts = 2
