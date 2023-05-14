@@ -19,11 +19,11 @@ import trader_bots
 
 class GeneticAlgorithmOptimizer(object):
 
-    def __init__(self, ohlcv_df, trader_agent, trade_signals, fee_percentage, population_size, mutation_rate, num_generations):
+    # def __init__(self, ohlcv_df, trader_agent, trade_signals, fee_percentage, population_size, mutation_rate, num_generations):
+    def __init__(self, ohlcv_df, trader_agent, fee_percentage, population_size, mutation_rate, num_generations):
         self.trader_agent = trader_agent
         self.trader_agent_params = trader_agent.params
-
-        self.trade_signals = trade_signals
+        
         self.fee_percentage = fee_percentage
         self.bot_type = trader_agent.bot_type
 
@@ -108,8 +108,7 @@ class GeneticAlgorithmOptimizer(object):
 
             # Evaluate the fitness of each trader agent
             # fitness_scores = [self.fitness(trader_agent, self.trade_signals, self.fee_percentage) for trader_agent in population]
-            fitness_scores = [self.fitness(
-                trader_agent, trader_agent.generate_signals(), self.fee_percentage) for trader_agent in population]
+            fitness_scores = [self.fitness(trader_agent, trader_agent.generate_signals(), self.fee_percentage) for trader_agent in population]
 
             # Select the top-performing trader agents to be the elite members of the next generation
             elite_indices = sorted(range(
@@ -160,9 +159,8 @@ class GeneticAlgorithmOptimizer(object):
             population = new_population
 
         # Return the best-performing trader agent
-        # fitness_scores = [self.fitness(trader_agent, self.trade_signals, self.fee_percentage) for trader_agent in population]
-        fitness_scores = [self.fitness(
-            trader_agent, trader_agent.generate_signals(), self.fee_percentage) for trader_agent in population]
+        # fitness_scores = [self.fitness(trader_agent, self.generate_signals(), self.fee_percentage) for trader_agent in population]
+        fitness_scores = [self.fitness(trader_agent, trader_agent.generate_signals(), self.fee_percentage) for trader_agent in population]
 
         best_index = max(range(len(fitness_scores)),
                          key=lambda i: fitness_scores[i])
